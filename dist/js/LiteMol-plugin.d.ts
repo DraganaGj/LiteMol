@@ -12070,6 +12070,7 @@ declare namespace LiteMol.Visualization.Molecule.Cartoons.Geometry {
         directionConesGeometry: THREE.BufferGeometry | undefined;
         vertexMap: Selection.VertexMap;
         vertexStateBuffer: THREE.BufferAttribute;
+        cylinder: THREE.CylinderGeometry;
         dispose(): void;
     }
     interface CreateParameters {
@@ -12254,6 +12255,201 @@ declare namespace LiteMol.Visualization.Molecule.Cartoons {
             params: Parameters;
             props?: Model.Props;
         }): Core.Computation<Model>;
+    }
+}
+declare namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
+    class DataSchematic extends GeometryBase {
+        geometry: THREE.BufferGeometry;
+        pickGeometry: THREE.BufferGeometry;
+        gapsGeometry: THREE.BufferGeometry | undefined;
+        directionConesGeometry: THREE.BufferGeometry | undefined;
+        vertexMap: Selection.VertexMap;
+        vertexStateBuffer: THREE.BufferAttribute;
+        dispose(): void;
+    }
+    interface CreateParametersSchematic {
+        radialSegmentCount: number;
+        tessalation: number;
+        showDirectionCones: boolean;
+    }
+    interface ContextSchematic {
+        computation: Core.Computation.Context;
+        model: Core.Structure.Molecule.Model;
+        atomIndices: number[];
+        linearSegments: number;
+        parameters: CreateParametersSchematic;
+        isTrace: boolean;
+        params: SchematicGeometryParams;
+        state: SchematicGeometryState;
+        units: CartoonAsymUnit[];
+        strandTemplate: {
+            vertex: number[];
+            normal: number[];
+            index: number[];
+            geometry: THREE.BufferGeometry;
+        };
+        strandArrays: {
+            startIndex: number[];
+            endIndex: number[];
+            x: number[];
+            y: number[];
+            z: number[];
+            name: string[];
+        };
+        builder: BuilderSchematic;
+        geom: DataSchematic;
+    }
+    function create(model: Core.Structure.Molecule.Model, atomIndices: number[], linearSegments: number, parameters: CreateParametersSchematic, isTrace: boolean, computation: Core.Computation.Context): Promise<DataSchematic>;
+}
+declare namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
+    class SchematicGeometryParams {
+        radialSegmentCount: number;
+        heightSegmentCount: number;
+        turnWidth: number;
+        strandWidth: number;
+        nucleotideStrandLineWidth: number;
+        nucleotideStrandFactor: number;
+        helixWidth: number;
+        helixHeight: number;
+        sheetWidth: number;
+        sheetHeight: number;
+        arrowWidth: number;
+        tessalation: number;
+        static Default: SchematicGeometryParams;
+    }
+    import GB = Visualization.Geometry.Builder;
+    class SchematicGeometryState {
+        params: SchematicGeometryParams;
+        private residueCount;
+        residueIndex: number;
+        readonly verticesDone: number;
+        readonly trianglesDone: number;
+        builder: GB.Dynamic;
+        private vs;
+        private is;
+        gapsBuilder: GB.Dynamic;
+        private dCones;
+        private dConesInit;
+        readonly directionConesBuilder: GB.Dynamic;
+        translationMatrix: THREE.Matrix4;
+        scaleMatrix: THREE.Matrix4;
+        rotationMatrix: THREE.Matrix4;
+        invMatrix: THREE.Matrix4;
+        vertexMap: Selection.VertexMapBuilder;
+        addVertex(v: THREE.Vector3, n: THREE.Vector3): void;
+        addTriangle(i: number, j: number, k: number): void;
+        addTriangles(i: number, j: number, k: number, u: number, v: number, w: number): void;
+        constructor(params: SchematicGeometryParams, residueCount: number);
+    }
+    function buildUnit(unit: CartoonAsymUnit, ctx: ContextSchematic): void;
+    function buildUnitsAsync(ctx: ContextSchematic): Promise<void>;
+    function createGeometry(ctx: ContextSchematic): void;
+    class BuilderSchematic {
+        constructor();
+        private tempVectors;
+        private setVector;
+        addTube(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number): void;
+        addTubeCap(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number, isStart: boolean, isEnd: boolean): void;
+        addSheet(element: CartoonAsymUnit, state: SchematicGeometryState, isStart: boolean, isEnd: boolean): void;
+        addSheetCap(element: CartoonAsymUnit, state: SchematicGeometryState, isStart: boolean, isEnd: boolean): void;
+        addSheepCapSection(state: SchematicGeometryState, p1: THREE.Vector3, p2: THREE.Vector3, p3: THREE.Vector3, p4: THREE.Vector3): void;
+        private findN3;
+        hasP(index: number, arrays: {
+            startIndex: number[];
+            endIndex: number[];
+            x: number[];
+            y: number[];
+            z: number[];
+            name: string[];
+        }): boolean;
+        addStrandLine(element: CartoonAsymUnit, state: SchematicGeometryState, template: {
+            vertex: number[];
+            normal: number[];
+            index: number[];
+            geometry: THREE.BufferGeometry;
+        }, arrays: {
+            startIndex: number[];
+            endIndex: number[];
+            x: number[];
+            y: number[];
+            z: number[];
+            name: string[];
+        }, residueIndex: number): void;
+    }
+}
+declare namespace LiteMol.Visualization.Molecule.Schematic {
+    enum CartoonsModelType {
+        Default = 0,
+        AlphaTrace = 1
+    }
+    interface Parameters {
+        tessalation?: number;
+        drawingType?: CartoonsModelType;
+        showDirectionCones?: boolean;
+    }
+    const DefaultCartoonsModelParameters: Parameters;
+    class Model extends Visualization.Model {
+        private model;
+        private material;
+        private gapMaterial;
+        private directionConeMaterial;
+        private pickMaterial;
+        private queryContext;
+        private cartoons;
+        protected applySelectionInternal(indices: number[], action: Selection.Action): boolean;
+        getPickElements(pickId: number): number[];
+        highlightElement(pickId: number, highlight: boolean): boolean;
+        protected highlightInternal(isOn: boolean): boolean;
+        private applyColoring;
+        protected applyThemeInternal(theme: Theme): void;
+        private createObjects;
+        static create(entity: any, { model, queryContext, atomIndices, theme, params, props }: {
+            model: Core.Structure.Molecule.Model;
+            queryContext: Core.Structure.Query.Context;
+            atomIndices: number[];
+            theme: Theme;
+            params: Parameters;
+            props?: Model.Props;
+        }): Core.Computation<Model>;
+    }
+}
+declare namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
+    class CartoonAsymUnit {
+        private model;
+        private elements;
+        linearSegmentCount: number;
+        private controlPointsBuilder;
+        private torsionVectorsBuilder;
+        private normalVectorsBuilder;
+        private tempA;
+        private tempB;
+        private tempC;
+        controlPoints: number[];
+        torsionVectors: number[];
+        normalVectors: number[];
+        residueCount: number;
+        structureStarts: Core.Utils.FastSet<string | number>;
+        structureEnds: Core.Utils.FastSet<string | number>;
+        residueType: Core.Structure.SecondaryStructureType[];
+        residueIndex: Int32Array;
+        backboneOnly: boolean;
+        startResidueIndex: number;
+        endResidueIndex: number;
+        constructor(model: Core.Structure.Molecule.Model, elements: Core.Structure.SecondaryStructureElement[], linearSegmentCount: number);
+        private createControlPoints;
+        private initPositions;
+        private initControlsPoints;
+        private computeSplines;
+        private addSplineNode;
+        private reflectPositions;
+    }
+    namespace CartoonAsymUnit {
+        function reflect(target: THREE.Vector3, p1: THREE.Vector3, p2: THREE.Vector3, amount: number): void;
+        function spline(target: THREE.Vector3, p1: THREE.Vector3, p2: THREE.Vector3, p3: THREE.Vector3, t: number): void;
+        function maskSplit(element: Core.Structure.SecondaryStructureElement, mask: boolean[], target: Core.Structure.SecondaryStructureElement[]): void;
+        function isCartoonLike(atomIndices: number[], start: number, end: number, name: string[], a: string, b: string, isAmk: boolean): boolean;
+        function createMask(model: Core.Structure.Molecule.Model, atomIndices: number[]): boolean[];
+        function buildUnits(model: Core.Structure.Molecule.Model, atomIndices: number[], linearSegmentCount: number): CartoonAsymUnit[];
     }
 }
 declare namespace LiteMol.Visualization.Molecule.Colors {
@@ -13043,6 +13239,7 @@ declare namespace LiteMol.Bootstrap.Visualization.Molecule {
         'BallsAndSticks': TypeDescription;
         'VDWBalls': TypeDescription;
         'Surface': TypeDescription;
+        'Schematic': TypeDescription;
     };
     type Type = keyof (typeof TypeDescriptions);
     const Types: Type[];
@@ -13051,6 +13248,9 @@ declare namespace LiteMol.Bootstrap.Visualization.Molecule {
         detail: DetailType;
     }
     interface CartoonParams extends DetailParams {
+        showDirectionCone: boolean;
+    }
+    interface SchematicParams extends DetailParams {
         showDirectionCone: boolean;
     }
     interface BallsAndSticksParams extends DetailParams {
@@ -13073,6 +13273,7 @@ declare namespace LiteMol.Bootstrap.Visualization.Molecule {
     namespace Default {
         const DetailParams: DetailParams;
         const CartoonParams: CartoonParams;
+        const SchematicParams: SchematicParams;
         const BallsAndSticksParams: BallsAndSticksParams;
         const SurfaceParams: SurfaceParams;
         const Transparency: LiteMol.Visualization.Theme.Transparency;
@@ -13299,7 +13500,7 @@ declare namespace LiteMol.Bootstrap.Entity {
             tag?: any;
         }> {
         }
-        const Visual: Type<Visual.Props<"Surface" | "Cartoons" | "Calpha" | "BallsAndSticks" | "VDWBalls"> & {
+        const Visual: Type<Visual.Props<"Surface" | "Schematic" | "Cartoons" | "Calpha" | "BallsAndSticks" | "VDWBalls"> & {
             tag?: any;
         }>;
         namespace CoordinateStreaming {
@@ -14352,6 +14553,7 @@ declare namespace LiteMol.Plugin.Views.Transform.Molecule {
     class CreateVisual extends Transform.ControllerBase<Bootstrap.Components.Transform.MoleculeVisual> {
         private detail;
         private cartoons;
+        private schematic;
         private ballsAndSticks;
         private surface;
         private createColors;

@@ -16,11 +16,14 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
         'Calpha': { label: 'C-\u03B1 Trace', shortLabel: 'C-\u03B1' } as TypeDescription,
         'BallsAndSticks': { label: 'Balls and Sticks', shortLabel: `B'n'S` } as TypeDescription,
         'VDWBalls': { label: 'VDW Balls', shortLabel: 'VDW' } as TypeDescription,
-        'Surface': { label: 'Surface', shortLabel: 'Surface' } as TypeDescription
+        'Surface': { label: 'Surface', shortLabel: 'Surface' } as TypeDescription,
+		//schematic
+		'Schematic': {label: 'Schematic', shortLabel: 'Schematic'} as TypeDescription
     };
     export type Type = keyof (typeof TypeDescriptions);
     
-    export const Types: Type[] = [ 'Cartoons', 'Calpha', 'BallsAndSticks', 'VDWBalls', 'Surface' ];
+	//added schematic type
+    export const Types: Type[] = [ 'Cartoons', 'Calpha', 'BallsAndSticks', 'VDWBalls', 'Surface', 'Schematic'];
     export const DetailTypes: DetailType[] = [ 'Automatic', 'Very Low', 'Low', 'Medium', 'High', 'Very High' ];
     
     export interface DetailParams {
@@ -30,6 +33,13 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
     export interface CartoonParams extends DetailParams {
         showDirectionCone: boolean
     }
+    
+    
+	 //parameters for the schematic visualization
+	export interface SchematicParams extends DetailParams {
+		
+		showDirectionCone: boolean
+	}
         
     export interface BallsAndSticksParams extends DetailParams {
         useVDW: boolean,
@@ -52,6 +62,11 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
         export const DetailParams:DetailParams = { detail: 'Automatic' }
 
         export const CartoonParams: CartoonParams = {
+            showDirectionCone: false,
+            detail: 'Automatic'
+        };
+
+        export const SchematicParams: SchematicParams = {
             showDirectionCone: false,
             detail: 'Automatic'
         };
@@ -79,6 +94,8 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
         export const ForType: Map<Type, Style<any>> = (function() {    
             let types = {
                 'Cartoons': { type: 'Cartoons', params: CartoonParams, theme: { template: CartoonThemeTemplate, colors: CartoonThemeTemplate.colors, transparency: Transparency, interactive: true } },
+				//schematic
+				'Schematic': { type: 'Schematic', params: SchematicParams, theme: { template: CartoonThemeTemplate, colors: CartoonThemeTemplate.colors, transparency: Transparency, interactive: true } },
                 'Calpha': { type: 'Calpha', params: { detail: 'Automatic' }, theme: { template: CartoonThemeTemplate, colors: CartoonThemeTemplate.colors, transparency: Transparency, interactive: true } },
                 'BallsAndSticks': { type: 'BallsAndSticks', params: BallsAndSticksParams, theme: { template: ElementSymbolThemeTemplate, colors: ElementSymbolThemeTemplate.colors, transparency: Transparency, interactive: true } },
                 'VDWBalls': { type: 'VDWBalls', params: { detail: 'Automatic' }, theme: { template: ElementSymbolThemeTemplate, colors: ElementSymbolThemeTemplate.colors, transparency: Transparency, interactive: true } },

@@ -2,8 +2,10 @@
  * Copyright (c) 2016 - now David Sehnal, licensed under Apache 2.0, See LICENSE file for more info.
  */
 
-namespace LiteMol.Visualization.Molecule.Cartoons.Geometry {
-    export class Data extends GeometryBase {
+namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
+
+   
+    export class DataSchematic extends GeometryBase {
         geometry: THREE.BufferGeometry = <any>void 0;
         pickGeometry: THREE.BufferGeometry = <any>void 0;
 
@@ -12,8 +14,6 @@ namespace LiteMol.Visualization.Molecule.Cartoons.Geometry {
 
         vertexMap: Selection.VertexMap = <any>void 0;
         vertexStateBuffer: THREE.BufferAttribute = <any>void 0;
-        // adding the cylinder for the helix instead of tube
-        cylinder: THREE.CylinderGeometry = <any>void 0;
         
         dispose() {
             this.geometry.dispose();
@@ -27,44 +27,44 @@ namespace LiteMol.Visualization.Molecule.Cartoons.Geometry {
         }
     }
     
-    export interface CreateParameters {
+    export interface CreateParametersSchematic {
         radialSegmentCount: number, 
         tessalation: number,
         showDirectionCones: boolean
     }
 
-    export interface Context {
+    export interface ContextSchematic {
         computation: Core.Computation.Context,
         
         model: Core.Structure.Molecule.Model,
         atomIndices: number[],
         linearSegments: number,
-        parameters: CreateParameters,
+        parameters: CreateParametersSchematic,
         isTrace: boolean,
                 
-        params: CartoonsGeometryParams,
+        params: SchematicGeometryParams,
         
-        state: CartoonsGeometryState,
+        state: SchematicGeometryState,
         units: CartoonAsymUnit[],
         
         strandTemplate: { vertex: number[]; normal: number[]; index: number[]; geometry: THREE.BufferGeometry },
         strandArrays: { startIndex: number[]; endIndex: number[]; x: number[]; y: number[]; z: number[]; name: string[] },
         
-        builder: Builder,
+        builder: BuilderSchematic,
                 
-        geom: Data        
+        geom: DataSchematic        
     }
 
     export async function create(
         model: Core.Structure.Molecule.Model,
         atomIndices: number[],
         linearSegments: number,
-        parameters: CreateParameters,
+        parameters: CreateParametersSchematic,
         isTrace: boolean,
-        computation: Core.Computation.Context): Promise<Data> {
+        computation: Core.Computation.Context): Promise<DataSchematic> {
         
-        let params = <CartoonsGeometryParams>Core.Utils.extend({}, parameters, CartoonsGeometryParams.Default);
-        let ctx: Context = {
+        let params = <SchematicGeometryParams>Core.Utils.extend({}, parameters, SchematicGeometryParams.Default);
+        let ctx: ContextSchematic = {
             computation,
             model,
             atomIndices,
@@ -73,7 +73,7 @@ namespace LiteMol.Visualization.Molecule.Cartoons.Geometry {
             isTrace,
             
             params,
-            state: new CartoonsGeometryState(params, model.data.residues.count),
+            state: new SchematicGeometryState(params, model.data.residues.count),
             units: <any>void 0,
             
             strandArrays: {
@@ -84,9 +84,9 @@ namespace LiteMol.Visualization.Molecule.Cartoons.Geometry {
             },
             strandTemplate: <any>void 0,
             
-            builder: new Builder(),
+            builder: new BuilderSchematic(),
             
-            geom: new Data()
+            geom: new DataSchematic()
         };
         
         await ctx.computation.updateProgress('Building units...');

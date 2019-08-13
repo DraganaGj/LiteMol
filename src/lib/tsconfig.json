@@ -107,7 +107,12 @@
     "./Visualization/Molecule/Cartoons/Unit.ts",
     "./Visualization/Molecule/Cartoons/GeometryElements.ts",
     "./Visualization/Molecule/Cartoons/Model.ts",
+    "./Visualization/Molecule/Schematic/Geometry.ts",
+    "./Visualization/Molecule/Schematic/GeometryElements.ts",
+    "./Visualization/Molecule/Schematic/Model.ts",
+    "./Visualization/Molecule/Schematic/Unit.ts",
     "./Visualization/Molecule/Colors.ts",
+    
 
     "./Visualization/Primitive/Geometry.ts",
     "./Visualization/Primitive/Builder.ts",

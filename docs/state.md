@@ -87,8 +87,8 @@ Hopefully, to make this a bit more familiar, the entity tree can be described as
         <Model index='0'>
           <Group label='Macromolecule'>
             <Selection query='polymer'><Visual type='cartoon' /></Selection>
-            <Selection query='het'><Visual type='balls and sticks' /></Selection>
-            <Selection query='water'><Visual type='balls and sticks' /></Selection>
+            <Selection query='het'><Visual type='' /></Selection>
+            <Selection query='water'><Visual type='' /></Selection>
           </Group>
         </Model>
       </Molecule>

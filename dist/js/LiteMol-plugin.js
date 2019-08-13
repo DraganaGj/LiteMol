@@ -70221,6 +70221,8 @@ var LiteMol;
                             _this.directionConesGeometry = void 0;
                             _this.vertexMap = void 0;
                             _this.vertexStateBuffer = void 0;
+                            // adding the cylinder for the helix instead of tube
+                            _this.cylinder = void 0;
                             return _this;
                         }
                         Data.prototype.dispose = function () {
@@ -71647,6 +71649,1597 @@ var LiteMol;
                 }(Visualization.Model));
                 Cartoons.Model = Model;
             })(Cartoons = Molecule.Cartoons || (Molecule.Cartoons = {}));
+        })(Molecule = Visualization.Molecule || (Visualization.Molecule = {}));
+    })(Visualization = LiteMol.Visualization || (LiteMol.Visualization = {}));
+})(LiteMol || (LiteMol = {}));
+/*
+ * Copyright (c) 2016 - now David Sehnal, licensed under Apache 2.0, See LICENSE file for more info.
+ */
+var LiteMol;
+(function (LiteMol) {
+    var Visualization;
+    (function (Visualization) {
+        var Molecule;
+        (function (Molecule) {
+            var Schematic;
+            (function (Schematic) {
+                var Geometry;
+                (function (Geometry) {
+                    var DataSchematic = /** @class */ (function (_super) {
+                        __extends(DataSchematic, _super);
+                        function DataSchematic() {
+                            var _this = _super !== null && _super.apply(this, arguments) || this;
+                            _this.geometry = void 0;
+                            _this.pickGeometry = void 0;
+                            _this.gapsGeometry = void 0;
+                            _this.directionConesGeometry = void 0;
+                            _this.vertexMap = void 0;
+                            _this.vertexStateBuffer = void 0;
+                            return _this;
+                        }
+                        DataSchematic.prototype.dispose = function () {
+                            this.geometry.dispose();
+                            this.pickGeometry.dispose();
+                            if (this.gapsGeometry) {
+                                this.gapsGeometry.dispose();
+                            }
+                            if (this.directionConesGeometry) {
+                                this.directionConesGeometry.dispose();
+                            }
+                        };
+                        return DataSchematic;
+                    }(Visualization.GeometryBase));
+                    Geometry.DataSchematic = DataSchematic;
+                    function create(model, atomIndices, linearSegments, parameters, isTrace, computation) {
+                        return __awaiter(this, void 0, void 0, function () {
+                            var params, ctx, ret, _i, _a, k;
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0:
+                                        params = LiteMol.Core.Utils.extend({}, parameters, Geometry.SchematicGeometryParams.Default);
+                                        ctx = {
+                                            computation: computation,
+                                            model: model,
+                                            atomIndices: atomIndices,
+                                            linearSegments: linearSegments,
+                                            parameters: parameters,
+                                            isTrace: isTrace,
+                                            params: params,
+                                            state: new Geometry.SchematicGeometryState(params, model.data.residues.count),
+                                            units: void 0,
+                                            strandArrays: {
+                                                startIndex: model.data.residues.atomStartIndex,
+                                                endIndex: model.data.residues.atomEndIndex,
+                                                x: model.positions.x, y: model.positions.y, z: model.positions.z,
+                                                name: model.data.atoms.name
+                                            },
+                                            strandTemplate: void 0,
+                                            builder: new Geometry.BuilderSchematic(),
+                                            geom: new DataSchematic()
+                                        };
+                                        return [4 /*yield*/, ctx.computation.updateProgress('Building units...')];
+                                    case 1:
+                                        _b.sent();
+                                        ctx.units = Geometry.CartoonAsymUnit.buildUnits(ctx.model, ctx.atomIndices, ctx.linearSegments);
+                                        return [4 /*yield*/, Geometry.buildUnitsAsync(ctx)];
+                                    case 2:
+                                        _b.sent();
+                                        if (ctx.strandTemplate)
+                                            ctx.strandTemplate.geometry.dispose();
+                                        ctx.geom.vertexMap = ctx.state.vertexMap.getMap();
+                                        return [4 /*yield*/, ctx.computation.updateProgress('Creating geometry...')];
+                                    case 3:
+                                        _b.sent();
+                                        Geometry.createGeometry(ctx);
+                                        ret = ctx.geom;
+                                        // help the GC
+                                        for (_i = 0, _a = Object.keys(ctx); _i < _a.length; _i++) {
+                                            k = _a[_i];
+                                            if (!Object.prototype.hasOwnProperty.call(ctx, k))
+                                                continue;
+                                            ctx[k] = void 0;
+                                        }
+                                        return [2 /*return*/, ret];
+                                }
+                            });
+                        });
+                    }
+                    Geometry.create = create;
+                })(Geometry = Schematic.Geometry || (Schematic.Geometry = {}));
+            })(Schematic = Molecule.Schematic || (Molecule.Schematic = {}));
+        })(Molecule = Visualization.Molecule || (Visualization.Molecule = {}));
+    })(Visualization = LiteMol.Visualization || (LiteMol.Visualization = {}));
+})(LiteMol || (LiteMol = {}));
+/*
+ * Copyright (c) 2016 - now David Sehnal, licensed under Apache 2.0, See LICENSE file for more info.
+ */
+var LiteMol;
+(function (LiteMol) {
+    var Visualization;
+    (function (Visualization) {
+        var Molecule;
+        (function (Molecule) {
+            var Schematic;
+            (function (Schematic) {
+                var Geometry;
+                (function (Geometry) {
+                    var SchematicGeometryParams = /** @class */ (function () {
+                        function SchematicGeometryParams() {
+                            this.radialSegmentCount = 1;
+                            this.heightSegmentCount = 1;
+                            this.turnWidth = 1;
+                            this.strandWidth = 0.5;
+                            this.nucleotideStrandLineWidth = 0.15;
+                            this.nucleotideStrandFactor = 3;
+                            this.helixWidth = 2;
+                            this.helixHeight = 0.1;
+                            this.sheetWidth = 0.3;
+                            this.sheetHeight = 0.1;
+                            this.arrowWidth = 2;
+                            this.tessalation = 5;
+                        }
+                        SchematicGeometryParams.Default = new SchematicGeometryParams();
+                        return SchematicGeometryParams;
+                    }());
+                    Geometry.SchematicGeometryParams = SchematicGeometryParams;
+                    var GB = Visualization.Geometry.Builder;
+                    var SchematicGeometryState = /** @class */ (function () {
+                        function SchematicGeometryState(params, residueCount) {
+                            this.params = params;
+                            this.residueCount = residueCount;
+                            this.residueIndex = 0;
+                            this.builder = GB.createDynamic(this.residueCount * 8, this.residueCount * 16);
+                            this.vs = this.builder.vertices;
+                            this.is = this.builder.indices;
+                            this.gapsBuilder = GB.createDynamic(256, 512);
+                            this.dCones = GB.createDynamic(1, 1);
+                            this.dConesInit = false;
+                            this.translationMatrix = new Visualization.THREE.Matrix4();
+                            this.scaleMatrix = new Visualization.THREE.Matrix4();
+                            this.rotationMatrix = new Visualization.THREE.Matrix4();
+                            this.invMatrix = new Visualization.THREE.Matrix4();
+                            this.vertexMap = new Visualization.Selection.VertexMapBuilder(residueCount);
+                        }
+                        Object.defineProperty(SchematicGeometryState.prototype, "verticesDone", {
+                            get: function () {
+                                return this.vs.elementCount;
+                            },
+                            enumerable: true,
+                            configurable: true
+                        });
+                        Object.defineProperty(SchematicGeometryState.prototype, "trianglesDone", {
+                            get: function () {
+                                return this.is.elementCount;
+                            },
+                            enumerable: true,
+                            configurable: true
+                        });
+                        Object.defineProperty(SchematicGeometryState.prototype, "directionConesBuilder", {
+                            get: function () {
+                                if (this.dConesInit)
+                                    return this.dCones;
+                                this.dConesInit = true;
+                                this.dCones = GB.createDynamic(this.residueCount, this.residueCount);
+                                return this.dCones;
+                            },
+                            enumerable: true,
+                            configurable: true
+                        });
+                        SchematicGeometryState.prototype.addVertex = function (v, n) {
+                            GB.addVertex3d(this.builder, v.x, v.y, v.z);
+                            GB.addNormal3d(this.builder, n.x, n.y, n.z);
+                        };
+                        SchematicGeometryState.prototype.addTriangle = function (i, j, k) {
+                            GB.addIndex3d(this.builder, i, j, k);
+                        };
+                        SchematicGeometryState.prototype.addTriangles = function (i, j, k, u, v, w) {
+                            GB.addIndex3d(this.builder, i, j, k);
+                            GB.addIndex3d(this.builder, u, v, w);
+                        };
+                        return SchematicGeometryState;
+                    }());
+                    Geometry.SchematicGeometryState = SchematicGeometryState;
+                    function makeStrandLineTemplate(ctx) {
+                        var radius = ctx.params.nucleotideStrandLineWidth, tessalation = ctx.params.tessalation;
+                        var capPoints = 0, radiusPoints = 0, geom;
+                        switch (tessalation) {
+                            case 0:
+                                radiusPoints = 2;
+                                capPoints = 1;
+                                break;
+                            case 1:
+                                radiusPoints = 3;
+                                capPoints = 2;
+                                break;
+                            case 2:
+                                radiusPoints = 4;
+                                capPoints = 2;
+                                break;
+                            case 3:
+                                radiusPoints = 8;
+                                capPoints = 4;
+                                break;
+                            case 4:
+                                radiusPoints = 10;
+                                capPoints = 6;
+                                break;
+                            case 5:
+                                radiusPoints = 14;
+                                capPoints = 6;
+                                break;
+                            default:
+                                radiusPoints = 16;
+                                capPoints = 8;
+                                break;
+                        }
+                        var arc = [], delta = (Math.PI / 2) / capPoints;
+                        for (var i = 0; i <= capPoints; i++) {
+                            arc[i] = new Visualization.THREE.Vector3(0, radius * Math.cos(i * delta), 0.1 * Math.sin(i * delta));
+                            arc[i].z += 0.9;
+                        }
+                        geom = new Visualization.THREE.LatheGeometry([new Visualization.THREE.Vector3(0, radius, 0)].concat(arc), radiusPoints, Math.PI);
+                        var templ = Visualization.GeometryHelper.getIndexedBufferGeometry(geom);
+                        ctx.strandTemplate = {
+                            vertex: templ.attributes.position.array,
+                            normal: templ.attributes.normal.array,
+                            index: templ.attributes.index.array,
+                            geometry: templ
+                        };
+                    }
+                    function buildUnit(unit, ctx) {
+                        var state = ctx.state, params = ctx.params;
+                        var builder = ctx.builder;
+                        for (var index = 0, _max = unit.residueCount; index < _max; index++) {
+                            state.vertexMap.startElement(unit.residueIndex[index]);
+                            var numVertices = state.verticesDone;
+                            state.residueIndex = index;
+                            var start = unit.structureStarts.has(unit.residueIndex[index]);
+                            var end = unit.structureEnds.has(unit.residueIndex[index]);
+                            if (ctx.isTrace || unit.backboneOnly) {
+                                switch (unit.residueType[index]) {
+                                    case 5 /* Strand */:
+                                        /* builder.addTube(unit, state, params.strandWidth, params.strandWidth /*,
+                                             builder.hasP(unit.residueIndex[index], ctx.strandArrays) ? params.nucleotideStrandFactor : 1*/ /*);
+                                    if (start || end) {
+                                        builder.addTubeCap(unit, state,  params.strandWidth, params.strandWidth, start, end);
+                                    }
+            
+                                    if (!ctx.strandTemplate) {
+                                        makeStrandLineTemplate(ctx);
+                                    }
+                                    builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
+                                    break; */
+                                        builder.addSheet(unit, state, start, end);
+                                        if (start || end) {
+                                            builder.addSheetCap(unit, state, start, end);
+                                            if (!ctx.strandTemplate) {
+                                                makeStrandLineTemplate(ctx);
+                                            }
+                                            builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
+                                        }
+                                        break;
+                                    default:
+                                        builder.addTube(unit, state, params.turnWidth, params.turnWidth /*, 1*/);
+                                        if (start || end) {
+                                            builder.addTubeCap(unit, state, params.turnWidth, params.turnWidth, start, end);
+                                        }
+                                        break;
+                                }
+                            }
+                            else {
+                                switch (unit.residueType[index]) {
+                                    case 1 /* Helix */:
+                                        builder.addTube(unit, state, params.helixWidth, params.helixHeight /*, 1*/);
+                                        if (start) {
+                                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, true, false);
+                                        }
+                                        else if (end) {
+                                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, false, true);
+                                        }
+                                        break;
+                                    case 3 /* Sheet */:
+                                        builder.addSheet(unit, state, start, end);
+                                        if (start || end) {
+                                            builder.addSheetCap(unit, state, start, end);
+                                        }
+                                        break;
+                                    case 5 /* Strand */:
+                                        /* builder.addTube(unit, state, params.strandWidth, params.strandWidth /*,
+                                             builder.hasP(unit.residueIndex[index], ctx.strandArrays)  ? params.nucleotideStrandFactor : 1*/ /*);
+                                    if (start || end) {
+                                        builder.addTubeCap(unit, state, params.strandWidth, params.strandWidth, start, end);
+                                    } */
+                                        builder.addSheet(unit, state, start, end);
+                                        if (start || end) {
+                                            builder.addSheetCap(unit, state, start, end);
+                                            if (!ctx.strandTemplate) {
+                                                makeStrandLineTemplate(ctx);
+                                            }
+                                            builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
+                                        }
+                                        break;
+                                    default:
+                                        builder.addTube(unit, state, params.turnWidth, params.turnWidth /*, 1*/);
+                                        if (start || end) {
+                                            builder.addTubeCap(unit, state, params.turnWidth, params.turnWidth, start, end);
+                                        }
+                                        break;
+                                }
+                            }
+                            if (ctx.parameters.showDirectionCones && unit.residueType[index] !== 5 /* Strand */) {
+                                renderDirectionCone(ctx, unit, 2 * params.sheetHeight, index);
+                            }
+                            state.vertexMap.addVertexRange(numVertices, state.verticesDone);
+                            state.vertexMap.endElement();
+                        }
+                    }
+                    Geometry.buildUnit = buildUnit;
+                    function isGap(ctx, a, b) {
+                        var chainIndex = ctx.model.data.residues.chainIndex;
+                        return chainIndex[a.endResidueIndex] === chainIndex[b.endResidueIndex];
+                    }
+                    var Vec3 = LiteMol.Core.Geometry.LinearAlgebra.Vector3;
+                    var Mat4 = LiteMol.Core.Geometry.LinearAlgebra.Matrix4;
+                    function renderGap(ctx, unitA, unitB) {
+                        var aL = unitA.controlPoints.length;
+                        var cpA = unitA.controlPoints, cpB = unitB.controlPoints;
+                        var a = Vec3.fromValues(cpA[aL - 3], cpA[aL - 2], cpA[aL - 1]), b = Vec3.fromValues(cpB[0], cpB[1], cpB[2]);
+                        var r = ctx.state.params.turnWidth / 2;
+                        GB.addDashedLine(ctx.state.gapsBuilder, a, b, 0.5, 0.5, r);
+                    }
+                    var coneTemplate = (function () {
+                        var geom = new Visualization.THREE.CylinderGeometry(0, 1, 1, 6, 1);
+                        var ret = Visualization.GeometryHelper.toRawGeometry(geom);
+                        geom.dispose();
+                        return ret;
+                    })();
+                    var coneDirection = Vec3.zero(), coneUp = Vec3.fromValues(0, 1, 0), coneA = Vec3.zero(), coneB = Vec3.zero(), coneTranslation = Vec3.zero(), coneScale = Vec3.zero(), coneRotation = Mat4.identity();
+                    function renderDirectionCone(ctx, unit, radius, residueIndex) {
+                        if (unit.residueCount <= 2)
+                            return;
+                        var cp = unit.controlPoints;
+                        var i = residueIndex * unit.linearSegmentCount + ((0.35 * unit.linearSegmentCount + 1) | 0);
+                        var j = residueIndex * unit.linearSegmentCount + ((0.85 * unit.linearSegmentCount + 1) | 0);
+                        if (i === j || 3 * j > cp.length)
+                            return;
+                        Vec3.set(coneTranslation, cp[3 * i], cp[3 * i + 1], cp[3 * i + 2]);
+                        Vec3.set(coneA, cp[3 * i], cp[3 * i + 1], cp[3 * i + 2]);
+                        Vec3.set(coneB, cp[3 * j], cp[3 * j + 1], cp[3 * j + 2]);
+                        Vec3.sub(coneA, coneB, coneA);
+                        var l = Vec3.magnitude(coneA);
+                        if (l <= 0.1)
+                            return;
+                        Vec3.set(coneScale, 2 * radius, l, 2 * radius);
+                        Vec3.normalize(coneA, coneA);
+                        Vec3.makeRotation(coneRotation, coneUp, coneA);
+                        GB.addRawTransformed(ctx.state.directionConesBuilder, coneTemplate, coneScale, coneTranslation, coneRotation);
+                    }
+                    function buildUnitsAsync(ctx) {
+                        return __awaiter(this, void 0, void 0, function () {
+                            var chunkSize, started, unitIndex, residuesDone, t, i;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        chunkSize = 10000;
+                                        started = LiteMol.Core.Utils.PerformanceMonitor.currentTime();
+                                        unitIndex = 0;
+                                        _a.label = 1;
+                                    case 1:
+                                        if (!(unitIndex < ctx.units.length)) return [3 /*break*/, 4];
+                                        residuesDone = 0;
+                                        while (residuesDone < chunkSize && unitIndex < ctx.units.length) {
+                                            buildUnit(ctx.units[unitIndex], ctx);
+                                            residuesDone += ctx.units[unitIndex].residueCount;
+                                            unitIndex++;
+                                        }
+                                        t = LiteMol.Core.Utils.PerformanceMonitor.currentTime();
+                                        if (!(t - started > LiteMol.Core.Computation.UpdateProgressDelta)) return [3 /*break*/, 3];
+                                        started = t;
+                                        return [4 /*yield*/, ctx.computation.updateProgress('Building units...', true, unitIndex, ctx.units.length)];
+                                    case 2:
+                                        _a.sent();
+                                        _a.label = 3;
+                                    case 3: return [3 /*break*/, 1];
+                                    case 4:
+                                        for (i = 0; i < ctx.units.length - 1; i++) {
+                                            if (isGap(ctx, ctx.units[i], ctx.units[i + 1])) {
+                                                renderGap(ctx, ctx.units[i], ctx.units[i + 1]);
+                                            }
+                                        }
+                                        return [2 /*return*/];
+                                }
+                            });
+                        });
+                    }
+                    Geometry.buildUnitsAsync = buildUnitsAsync;
+                    function createGeometry(ctx) {
+                        var state = ctx.state;
+                        var colorBuffer = new Float32Array(state.verticesDone * 3), pickColorBuffer = new Float32Array(state.verticesDone * 4), stateBuffer = new Float32Array(state.verticesDone);
+                        var geometry = GB.toBufferGeometry(state.builder);
+                        geometry.addAttribute('color', new Visualization.THREE.BufferAttribute(colorBuffer, 3));
+                        ctx.geom.vertexStateBuffer = new Visualization.THREE.BufferAttribute(stateBuffer, 1);
+                        geometry.addAttribute('vState', ctx.geom.vertexStateBuffer);
+                        ctx.geom.geometry = geometry;
+                        if (state.gapsBuilder.vertices.elementCount) {
+                            ctx.geom.gapsGeometry = GB.toBufferGeometry(state.gapsBuilder);
+                        }
+                        if (state.directionConesBuilder.vertices.elementCount) {
+                            ctx.geom.directionConesGeometry = GB.toBufferGeometry(state.directionConesBuilder);
+                        }
+                        var map = ctx.geom.vertexMap, color = { r: 0.45, g: 0.45, b: 0.45 }, vertexRanges = map.vertexRanges;
+                        for (var _i = 0, _a = map.elementIndices; _i < _a.length; _i++) {
+                            var elementIndex = _a[_i];
+                            var elementOffset = map.elementMap.get(elementIndex);
+                            var rangeStart = map.elementRanges[2 * elementOffset], rangeEnd = map.elementRanges[2 * elementOffset + 1];
+                            if (rangeStart === rangeEnd)
+                                continue;
+                            Visualization.Selection.Picking.assignPickColor(elementIndex, color);
+                            for (var i = rangeStart; i < rangeEnd; i += 2) {
+                                var vStart = vertexRanges[i], vEnd = vertexRanges[i + 1];
+                                for (var j = vStart; j < vEnd; j++) {
+                                    pickColorBuffer[j * 4] = color.r;
+                                    pickColorBuffer[j * 4 + 1] = color.g;
+                                    pickColorBuffer[j * 4 + 2] = color.b;
+                                }
+                            }
+                        }
+                        var pickGeometry = new Visualization.THREE.BufferGeometry();
+                        pickGeometry.addAttribute('position', geometry.getAttribute('position'));
+                        pickGeometry.addAttribute('index', geometry.getAttribute('index'));
+                        pickGeometry.addAttribute('pColor', new Visualization.THREE.BufferAttribute(pickColorBuffer, 4));
+                        ctx.geom.pickGeometry = pickGeometry;
+                    }
+                    Geometry.createGeometry = createGeometry;
+                    var BuilderSchematic = /** @class */ (function () {
+                        function BuilderSchematic() {
+                            this.tempVectors = [
+                                new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(),
+                                new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(),
+                                new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3(), new Visualization.THREE.Vector3()
+                            ];
+                        }
+                        BuilderSchematic.prototype.setVector = function (data, i, v) {
+                            v.set(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
+                            return v;
+                        };
+                        BuilderSchematic.prototype.addTube = function (element, state, width, height /*, waveFactor: number*/) {
+                            var verticesDone = state.verticesDone, i = 0, j = 0, radialVector = this.tempVectors[0], normalVector = this.tempVectors[1], tempPos = this.tempVectors[2], a = this.tempVectors[3], b = this.tempVectors[4], u = this.tempVectors[5], v = this.tempVectors[6], horizontalVector = this.tempVectors[7], verticalVector = this.tempVectors[8], positionVector = this.tempVectors[9], normalOffset = this.tempVectors[10], torsionVector = this.tempVectors[11], elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementOffsetEnd = elementOffsetStart + element.linearSegmentCount, elementPoints = element.controlPoints, elementPointsCount = element.linearSegmentCount + 1, torsionVectors = element.torsionVectors, normalVectors = element.normalVectors, radialSegmentCount = state.params.radialSegmentCount;
+                            var di = 1 / (elementOffsetEnd - elementOffsetStart);
+                            for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
+                                this.setVector(torsionVectors, i, u);
+                                this.setVector(normalVectors, i, v);
+                                var tt = di * (i - elementOffsetStart);
+                                var ff = (Math.cos(2 * Math.PI * tt));
+                                /* const tt = di * (i - elementOffsetStart) - 0.5;
+                                  
+                                  const ff = 1 + (waveFactor - 1) * (Math.cos(2 * Math.PI * tt) + 1);
+                                  //const ff =(Math.cos(2 * Math.PI * tt));
+                                  
+                                  
+                  
+                                 
+                                 /* for (j = 0; j < radialSegmentCount; j++) {
+                                      let t = 2 * Math.PI * j / radialSegmentCount;
+                                      //let t = 2 * Math.PI * j / radialSegmentCount;
+                                  const x = r * Math.cos(t);
+                                  const y = r * Math.sin (t);
+                                      a.copy(u);
+                                      b.copy(v);
+                                      radialVector.addVectors(a.multiplyScalar(x * Math.cos(t)), b.multiplyScalar(y * Math.sin(t)));
+                                      radialVector.addVectors(a.multiplyScalar(x* Math.cos(t)), b.multiplyScalar(y * Math.sin(t)));
+                  
+                                     a.copy(u);
+                                     b.copy(v);
+                                     normalVector.addVectors(a.multiplyScalar(y *Math.cos(t)), b.multiplyScalar(x* Math.sin(t)));
+                                     normalVector.normalize();
+                  
+                                      this.setVector(elementPoints, i, tempPos);
+                                      tempPos.add(radialVector);
+                  */
+                                var cylinder = Visualization.THREE.CylinderGeometry;
+                                //const tt = di * (i - elementOffsetStart) - 0.5;
+                                //const tt = (elementOffsetEnd - elementOffsetStart);
+                                //const ff = Math.cos (2*Math.PI*tt);
+                                //const ff = /*1 + (waveFactor - 1) */ (Math.cos(2 * Math.PI /* tt*/) + 1);
+                                //const volume = Math.PI * (width/2) * height;
+                                var params = state.params;
+                                var w = params.helixWidth, h = /*ff * */ params.helixHeight;
+                                var r = width / 2;
+                                var volume = Math.PI * Math.pow(r, 2) * height;
+                                for (j = 0; j < radialSegmentCount; j++) {
+                                    var t = 2 * Math.PI * j / radialSegmentCount;
+                                    //let t = Math.atan2(h,w);
+                                    //let t = Math.atan2 (j,i);
+                                    a.copy(u);
+                                    b.copy(v);
+                                    radialVector = a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t));
+                                    a.copy(u);
+                                    b.copy(v);
+                                    normalVector.addVectors(a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t)));
+                                    normalVector.normalize();
+                                    this.setVector(elementPoints, i, tempPos);
+                                    tempPos.add(radialVector);
+                                    state.addVertex(tempPos, radialVector);
+                                    /*this.setVector(torsionVectors, i, horizontalVector);
+                                    horizontalVector.multiplyScalar(r);
+                                    tempPos.add(horizontalVector);
+                
+                
+                                    state.addVertex(tempPos, horizontalVector);*/
+                                    /*                this.setVector(torsionVectors, i, horizontalVector);
+                                                    horizontalVector.multiplyScalar(w);
+                                    
+                                                    this.setVector(normalVectors, i, verticalVector);
+                                                    verticalVector.multiplyScalar(h);
+                                    
+                                                    normalOffset.set(0, 0, 0);
+                                    
+                                                        normalOffset.crossVectors(a, b).multiplyScalar(elementOffsetEnd-elementOffsetStart);
+                                                    }
+                                    
+                                                    this.setVector(elementPoints, i, positionVector);
+                                                    this.setVector(normalVectors, i, normalVector);
+                                                    this.setVector(torsionVectors, i, torsionVector);
+                                    
+                                                    a.copy(positionVector).add(horizontalVector).add(verticalVector);
+                                                    b.copy(normalVector);
+                                                    state.addVertex(a, b);
+                                    
+                                                    a.copy(positionVector).sub(horizontalVector).add(verticalVector);
+                                                    state.addVertex(a, b);
+                                    
+                                                    a.copy(positionVector).sub(horizontalVector).add(verticalVector);
+                                                    b.copy(torsionVector).negate().add(normalOffset);
+                                                    state.addVertex(a, b);
+                                    
+                                                    a.copy(positionVector).sub(horizontalVector).sub(verticalVector);
+                                                    state.addVertex(a, b);
+                                    
+                                                    a.copy(positionVector).sub(horizontalVector).sub(verticalVector);
+                                                    b.copy(normalVector).negate();
+                                                    state.addVertex(a, b);
+                                    
+                                                    a.copy(positionVector).add(horizontalVector).sub(verticalVector);
+                                                    state.addVertex(a, b);
+                                    
+                                                    a.copy(positionVector).add(horizontalVector).sub(verticalVector);
+                                                    b.copy(torsionVector).add(normalOffset);
+                                                    state.addVertex(a, b);
+                                    
+                                                    a.copy(positionVector).add(horizontalVector).add(verticalVector);
+                                                    state.addVertex(a, b);
+                                                    let t = 2 * Math.PI * j / radialSegmentCount;
+                                                    normalVector.addVectors(a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t)));
+                                    normalVector.normalize();
+                                
+                                    
+                                
+                                    this.setVector(elementPoints, i, tempPos);
+                                    tempPos.add(normalVector);
+                                
+                                
+                                                    state.addVertex(tempPos, normalVector);
+                                
+                                                    this.setVector(elementPoints, i, tempPos);
+                                    tempPos.add(verticalVector);
+                                
+                                
+                                                    state.addVertex(tempPos, radialVector);
+                                
+                                                    
+                                } */
+                                }
+                            }
+                            for (i = 0; i < elementPointsCount - 1; i++) {
+                                for (j = 0; j < radialSegmentCount; j++) {
+                                    state.addTriangles((verticesDone + i * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + (j + 1)), (verticesDone + i * radialSegmentCount + (j + 1)), (verticesDone + i * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + (j + 1)));
+                                }
+                            }
+                        };
+                        BuilderSchematic.prototype.addTubeCap = function (element, state, width, height, isStart, isEnd) {
+                            var verticesDone = state.verticesDone, t, radialVector = this.tempVectors[0], normalVector = this.tempVectors[1], a = this.tempVectors[2], b = this.tempVectors[3], u = this.tempVectors[4], v = this.tempVectors[5], tA = this.tempVectors[6], tB = this.tempVectors[7], elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementPoints = element.controlPoints, elementPointsCount = element.linearSegmentCount + 1, torsionVectors = element.torsionVectors, normalVectors = element.normalVectors, radialSegmentCount = state.params.radialSegmentCount;
+                            this.setVector(torsionVectors, elementOffsetStart, tA);
+                            this.setVector(normalVectors, elementOffsetStart, tB);
+                            normalVector.crossVectors(tA, tB);
+                            if (isEnd) {
+                                normalVector.negate();
+                            }
+                            var offset = elementOffsetStart + (isStart ? 0 : (elementPointsCount - 1));
+                            this.setVector(elementPoints, offset, radialVector);
+                            state.addVertex(radialVector, normalVector);
+                            this.setVector(torsionVectors, offset, u);
+                            this.setVector(normalVectors, offset, v);
+                            for (var i = 0; i < radialSegmentCount; i++) {
+                                t = 2 * Math.PI * i / radialSegmentCount;
+                                var r = width / 2;
+                                a.copy(u);
+                                b.copy(v);
+                                radialVector.addVectors(a.multiplyScalar(Math.cos(t) * r), b.multiplyScalar(Math.sin(t) * r));
+                                this.setVector(elementPoints, offset, tA);
+                                radialVector.add(tA);
+                                state.addVertex(radialVector, normalVector);
+                                if (isStart) {
+                                    state.addTriangle(verticesDone, (verticesDone + i + 1), (verticesDone + (i + 1) % radialSegmentCount + 1));
+                                }
+                                else {
+                                    state.addTriangle((verticesDone), (verticesDone + (i + 1) % radialSegmentCount + 1), (verticesDone + i + 1));
+                                }
+                            }
+                        };
+                        BuilderSchematic.prototype.addSheet = function (element, state, isStart, isEnd) {
+                            var verticesDone = state.verticesDone, params = state.params, i = 0, j = 0, horizontalVector = this.tempVectors[0], verticalVector = this.tempVectors[1], positionVector = this.tempVectors[2], normalOffset = this.tempVectors[3], normalVector = this.tempVectors[4], temp = this.tempVectors[5], tA = this.tempVectors[7], tB = this.tempVectors[8], torsionVector = this.tempVectors[9], elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementOffsetEnd = elementOffsetStart + element.linearSegmentCount, elementPoints = element.controlPoints, torsionVectors = element.torsionVectors, normalVectors = element.normalVectors, 
+                            /*elementPointsCount = element.linearSegmentCount + 1,
+                            radialSegmentCount = state.params.radialSegmentCount,*/
+                            offsetLength = 0, actualWidth = 0;
+                            normalOffset.set(0, 0, 0);
+                            if (isEnd) {
+                                this.setVector(elementPoints, elementOffsetEnd, tA);
+                                this.setVector(elementPoints, elementOffsetStart, tB);
+                                offsetLength = params.arrowWidth / temp.subVectors(tA, tB).length();
+                            }
+                            for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
+                                actualWidth = !isEnd ? params.sheetWidth : params.arrowWidth * (1 - (i - elementOffsetStart) / element.linearSegmentCount);
+                                this.setVector(torsionVectors, i, horizontalVector);
+                                horizontalVector.multiplyScalar(actualWidth);
+                                this.setVector(normalVectors, i, verticalVector);
+                                verticalVector.multiplyScalar(params.sheetHeight);
+                                if (isEnd) {
+                                    this.setVector(normalVectors, i, tA);
+                                    this.setVector(torsionVectors, i, tB);
+                                    normalOffset.crossVectors(tA, tB).multiplyScalar(offsetLength);
+                                }
+                                this.setVector(elementPoints, i, positionVector);
+                                this.setVector(normalVectors, i, normalVector);
+                                this.setVector(torsionVectors, i, torsionVector);
+                                tA.copy(positionVector).add(horizontalVector).add(verticalVector);
+                                tB.copy(normalVector);
+                                state.addVertex(tA, tB);
+                                tA.copy(positionVector).sub(horizontalVector).add(verticalVector);
+                                state.addVertex(tA, tB);
+                                tA.copy(positionVector).sub(horizontalVector).add(verticalVector);
+                                tB.copy(torsionVector).negate().add(normalOffset);
+                                state.addVertex(tA, tB);
+                                tA.copy(positionVector).sub(horizontalVector).sub(verticalVector);
+                                state.addVertex(tA, tB);
+                                tA.copy(positionVector).sub(horizontalVector).sub(verticalVector);
+                                tB.copy(normalVector).negate();
+                                state.addVertex(tA, tB);
+                                tA.copy(positionVector).add(horizontalVector).sub(verticalVector);
+                                state.addVertex(tA, tB);
+                                tA.copy(positionVector).add(horizontalVector).sub(verticalVector);
+                                tB.copy(torsionVector).add(normalOffset);
+                                state.addVertex(tA, tB);
+                                tA.copy(positionVector).add(horizontalVector).add(verticalVector);
+                                state.addVertex(tA, tB);
+                            }
+                            for (i = 0; i < element.linearSegmentCount; i++) {
+                                for (j = 0; j < 4; j++) {
+                                    state.addTriangles(verticesDone + i * 8 + 2 * j, verticesDone + (i + 1) * 8 + 2 * j + 1, verticesDone + i * 8 + 2 * j + 1, verticesDone + i * 8 + 2 * j, verticesDone + (i + 1) * 8 + 2 * j, verticesDone + (i + 1) * 8 + 2 * j + 1);
+                                }
+                            }
+                            /* for (i = 0; i < elementPointsCount - 1; i++) {
+                                    for (j = 0; j < radialSegmentCount; j++) {
+                                        state.addTriangles(
+                                            (verticesDone + i * radialSegmentCount + j),
+                                            (verticesDone + (i + 1) * radialSegmentCount + (j + 1)),
+                                            (verticesDone + i * radialSegmentCount + (j + 1) ),
+                    
+                                            (verticesDone + i * radialSegmentCount + j),
+                                            (verticesDone + (i + 1) * radialSegmentCount + j),
+                                            (verticesDone + (i + 1) * radialSegmentCount + (j + 1)));
+                                    }
+                                }
+                            */
+                        };
+                        BuilderSchematic.prototype.addSheetCap = function (element, state, isStart, isEnd) {
+                            var params = state.params, elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementPoint = this.setVector(element.controlPoints, elementOffsetStart, this.tempVectors[0]);
+                            var horizontalVector = this.setVector(element.torsionVectors, elementOffsetStart, this.tempVectors[1]).multiplyScalar(params.sheetWidth);
+                            var verticalVector = this.setVector(element.normalVectors, elementOffsetStart, this.tempVectors[2]).multiplyScalar(params.sheetHeight);
+                            var p1 = this.tempVectors[3].addVectors(elementPoint, horizontalVector).add(verticalVector), p2 = this.tempVectors[4].subVectors(elementPoint, horizontalVector).add(verticalVector), p3 = this.tempVectors[5].subVectors(elementPoint, horizontalVector).sub(verticalVector), p4 = this.tempVectors[6].addVectors(elementPoint, horizontalVector).sub(verticalVector);
+                            if (isStart) {
+                                this.addSheepCapSection(state, p1, p2, p3, p4);
+                            }
+                            else {
+                                var arrowHorizontalVector = this.setVector(element.torsionVectors, elementOffsetStart, this.tempVectors[7]).multiplyScalar(params.arrowWidth);
+                                var p5 = this.tempVectors[8].addVectors(elementPoint, arrowHorizontalVector).add(verticalVector), p6 = this.tempVectors[9].subVectors(elementPoint, arrowHorizontalVector).add(verticalVector), p7 = this.tempVectors[10].subVectors(elementPoint, arrowHorizontalVector).sub(verticalVector), p8 = this.tempVectors[11].addVectors(elementPoint, arrowHorizontalVector).sub(verticalVector);
+                                this.addSheepCapSection(state, p5, p1, p4, p8);
+                                this.addSheepCapSection(state, p2, p6, p7, p3);
+                            }
+                        };
+                        BuilderSchematic.prototype.addSheepCapSection = function (state, p1, p2, p3, p4) {
+                            var addedVerticesCount = state.verticesDone, normal = this.tempVectors[12].crossVectors(this.tempVectors[13].subVectors(p2, p1), this.tempVectors[14].subVectors(p4, p1)).normalize();
+                            state.addVertex(p1, normal);
+                            state.addVertex(p2, normal);
+                            state.addVertex(p3, normal);
+                            state.addVertex(p4, normal);
+                            state.addTriangles(addedVerticesCount, addedVerticesCount + 1, addedVerticesCount + 2, addedVerticesCount + 2, addedVerticesCount + 3, addedVerticesCount);
+                        };
+                        BuilderSchematic.prototype.findN3 = function (index, arrays, target) {
+                            var start = arrays.startIndex[index], end = arrays.endIndex[index];
+                            var found = false;
+                            for (var i = start; i < end; i++) {
+                                if (arrays.name[i] === "N3") {
+                                    target.set(arrays.x[i], arrays.y[i], arrays.z[i]);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            return found;
+                        };
+                        BuilderSchematic.prototype.hasP = function (index, arrays) {
+                            var start = arrays.startIndex[index], end = arrays.endIndex[index];
+                            for (var i = start; i < end; i++) {
+                                if (arrays.name[i] === "P")
+                                    return true;
+                            }
+                            return false;
+                        };
+                        BuilderSchematic.prototype.addStrandLine = function (element, state, template, arrays, residueIndex) {
+                            if (!this.findN3(residueIndex, arrays, this.tempVectors[3]))
+                                return;
+                            var p = this.tempVectors[0], n = this.tempVectors[1], i, vb = template.vertex, nb = template.normal, ib = template.index, vertexStart = state.verticesDone, vertexCount = vb.length, triangleCount = ib.length, elementOffset = state.residueIndex * element.linearSegmentCount + ((0.5 * element.linearSegmentCount + 1) | 0), elementPoint = this.setVector(element.controlPoints, elementOffset, this.tempVectors[2]), nDir = this.tempVectors[3].sub(elementPoint), length = nDir.length();
+                            nDir.normalize();
+                            state.translationMatrix.makeTranslation(elementPoint.x, elementPoint.y, elementPoint.z);
+                            state.scaleMatrix.makeScale(1, 1, length);
+                            state.rotationMatrix.makeRotationAxis(new Visualization.THREE.Vector3(-nDir.y, nDir.x, 0), Math.acos(nDir.z));
+                            state.translationMatrix.multiply(state.rotationMatrix).multiply(state.scaleMatrix);
+                            template.geometry.applyMatrix(state.translationMatrix);
+                            for (i = 0; i < vertexCount; i += 3) {
+                                p.set(vb[i], vb[i + 1], vb[i + 2]);
+                                n.set(nb[i], nb[i + 1], nb[i + 2]);
+                                state.addVertex(p, n);
+                            }
+                            for (i = 0; i < triangleCount; i += 3) {
+                                state.addTriangle(vertexStart + ib[i], vertexStart + ib[i + 1], vertexStart + ib[i + 2]);
+                            }
+                            state.invMatrix.getInverse(state.translationMatrix);
+                            template.geometry.applyMatrix(state.invMatrix);
+                        };
+                        return BuilderSchematic;
+                    }());
+                    Geometry.BuilderSchematic = BuilderSchematic;
+                })(Geometry = Schematic.Geometry || (Schematic.Geometry = {}));
+            })(Schematic = Molecule.Schematic || (Molecule.Schematic = {}));
+        })(Molecule = Visualization.Molecule || (Visualization.Molecule = {}));
+    })(Visualization = LiteMol.Visualization || (LiteMol.Visualization = {}));
+})(LiteMol || (LiteMol = {}));
+/*
+ * Copyright (c) 2016 - now David Sehnal, licensed under Apache 2.0, See LICENSE file for more info.
+ */
+var LiteMol;
+(function (LiteMol) {
+    var Visualization;
+    (function (Visualization) {
+        var Molecule;
+        (function (Molecule) {
+            var Schematic;
+            (function (Schematic) {
+                "use strict";
+                var CartoonsModelType;
+                (function (CartoonsModelType) {
+                    CartoonsModelType[CartoonsModelType["Default"] = 0] = "Default";
+                    CartoonsModelType[CartoonsModelType["AlphaTrace"] = 1] = "AlphaTrace";
+                })(CartoonsModelType = Schematic.CartoonsModelType || (Schematic.CartoonsModelType = {}));
+                ;
+                Schematic.DefaultCartoonsModelParameters = {
+                    tessalation: 20,
+                    drawingType: CartoonsModelType.Default,
+                    showDirectionCones: false
+                };
+                var Model = /** @class */ (function (_super) {
+                    __extends(Model, _super);
+                    function Model() {
+                        return _super !== null && _super.apply(this, arguments) || this;
+                    }
+                    Model.prototype.applySelectionInternal = function (indices, action) {
+                        var buffer = this.cartoons.vertexStateBuffer, array = buffer.array, map = this.cartoons.vertexMap, vertexRanges = map.vertexRanges, changed = false, residueIndex = this.model.data.atoms.residueIndex;
+                        for (var a = 0, _a = indices.length; a < _a; a++) {
+                            var index = residueIndex[indices[a]];
+                            a++;
+                            while (residueIndex[indices[a]] === index) {
+                                a++;
+                            }
+                            a--;
+                            if (!map.elementMap.has(index))
+                                continue;
+                            var indexOffset = map.elementMap.get(index), rangeStart = map.elementRanges[2 * indexOffset], rangeEnd = map.elementRanges[2 * indexOffset + 1];
+                            if (rangeStart === rangeEnd)
+                                continue;
+                            for (var i = rangeStart; i < rangeEnd; i += 2) {
+                                var vStart = vertexRanges[i], vEnd = vertexRanges[i + 1];
+                                changed = Visualization.Selection.applyActionToRange(array, vStart, vEnd, action) || changed;
+                            }
+                        }
+                        if (!changed)
+                            return false;
+                        buffer.needsUpdate = true;
+                        return true;
+                    };
+                    Model.prototype.getPickElements = function (pickId) {
+                        var _c = this.model.data.residues, atomStartIndex = _c.atomStartIndex, atomEndIndex = _c.atomEndIndex;
+                        var elements = [];
+                        for (var i = atomStartIndex[pickId], _b = atomEndIndex[pickId]; i < _b; i++) {
+                            if (this.queryContext.hasAtom(i))
+                                elements.push(i);
+                        }
+                        return elements;
+                    };
+                    Model.prototype.highlightElement = function (pickId, highlight) {
+                        return this.applySelection([this.model.data.residues.atomStartIndex[pickId]], highlight ? 3 /* Highlight */ : 4 /* RemoveHighlight */);
+                    };
+                    Model.prototype.highlightInternal = function (isOn) {
+                        return Visualization.Selection.applyActionToBuffer(this.cartoons.vertexStateBuffer, isOn ? 3 /* Highlight */ : 4 /* RemoveHighlight */);
+                    };
+                    Model.prototype.applyColoring = function (theme) {
+                        var _c = this.model.data.residues, atomStartIndex = _c.atomStartIndex, atomEndIndex = _c.atomEndIndex;
+                        var color = { r: 0.1, g: 0.1, b: 0.1 };
+                        var avgColor = { r: 0.1, g: 0.1, b: 0.1 };
+                        var map = this.cartoons.vertexMap;
+                        var bufferAttribute = this.cartoons.geometry.attributes.color;
+                        var buffer = bufferAttribute.array;
+                        var vertexRanges = map.vertexRanges;
+                        for (var rI = 0, _bRi = this.model.data.residues.count; rI < _bRi; rI++) {
+                            avgColor.r = 0;
+                            avgColor.g = 0;
+                            avgColor.b = 0;
+                            var count = 0;
+                            for (var aI = atomStartIndex[rI], _bAi = atomEndIndex[rI]; aI < _bAi; aI++) {
+                                if (!this.queryContext.hasAtom(aI))
+                                    continue;
+                                theme.setElementColor(aI, color);
+                                avgColor.r += color.r;
+                                avgColor.g += color.g;
+                                avgColor.b += color.b;
+                                count++;
+                            }
+                            if (!count)
+                                continue;
+                            color.r = avgColor.r / count;
+                            color.g = avgColor.g / count;
+                            color.b = avgColor.b / count;
+                            var elementOffset = map.elementMap.get(rI);
+                            var rangeStart = map.elementRanges[2 * elementOffset], rangeEnd = map.elementRanges[2 * elementOffset + 1];
+                            if (rangeStart === rangeEnd)
+                                continue;
+                            for (var i = rangeStart; i < rangeEnd; i += 2) {
+                                var vStart = vertexRanges[i], vEnd = vertexRanges[i + 1];
+                                for (var j = vStart; j < vEnd; j++) {
+                                    buffer[j * 3] = color.r,
+                                        buffer[j * 3 + 1] = color.g,
+                                        buffer[j * 3 + 2] = color.b;
+                                }
+                            }
+                        }
+                        bufferAttribute.needsUpdate = true;
+                        // const gapColor = Theme.getColor(theme, 'Gap', Colors.DefaultBondColor);
+                        // const gc = this.gapMaterial.color;
+                        // if (gapColor.r !== gc.r || gapColor.g !== gc.g || gapColor.b !== gc.b) {
+                        //     this.gapMaterial.color = new THREE.Color(gapColor.r, gapColor.g, gapColor.b);
+                        //     this.gapMaterial.needsUpdate = true;
+                        // }
+                        // const dcColor = Theme.getColor(theme, 'DirectionCone', Colors.DefaultCartoonDirectionConeColor);
+                        // const dc = this.gapMaterial.color;
+                        // if (dcColor.r !== dc.r || dcColor.g !== dc.g || dcColor.b !== dc.b) {
+                        //     this.directionConeMaterial.color = new THREE.Color(dcColor.r, dcColor.g, dcColor.b);
+                        //     this.directionConeMaterial.needsUpdate = true;
+                        // }
+                    };
+                    Model.prototype.applyThemeInternal = function (theme) {
+                        this.applyColoring(theme);
+                        Visualization.MaterialsHelper.updateMaterial(this.material, theme, this.object);
+                        Visualization.MaterialsHelper.updateMaterial(this.gapMaterial, theme, this.object);
+                        Visualization.MaterialsHelper.updateMaterial(this.directionConeMaterial, theme, this.object);
+                    };
+                    Model.prototype.createObjects = function () {
+                        var main = new Visualization.THREE.Object3D();
+                        main.add(new Visualization.THREE.Mesh(this.cartoons.geometry, this.material));
+                        if (this.cartoons.gapsGeometry) {
+                            main.add(new Visualization.THREE.Mesh(this.cartoons.gapsGeometry, this.gapMaterial));
+                        }
+                        if (this.cartoons.directionConesGeometry) {
+                            main.add(new Visualization.THREE.Mesh(this.cartoons.directionConesGeometry, this.directionConeMaterial));
+                        }
+                        return {
+                            main: main.children.length > 1 ? main : main.children[0],
+                            pick: new Visualization.THREE.Mesh(this.cartoons.pickGeometry, this.pickMaterial)
+                        };
+                    };
+                    Model.create = function (entity, _c) {
+                        var _this = this;
+                        var model = _c.model, queryContext = _c.queryContext, atomIndices = _c.atomIndices, theme = _c.theme, params = _c.params, props = _c.props;
+                        return LiteMol.Core.computation(function (ctx) { return __awaiter(_this, void 0, void 0, function () {
+                            var linearSegments, radialSements, cartoons, ret, obj;
+                            return __generator(this, function (_c) {
+                                switch (_c.label) {
+                                    case 0:
+                                        linearSegments = 0, radialSements = 0;
+                                        return [4 /*yield*/, ctx.updateProgress('Computing cartoons...')];
+                                    case 1:
+                                        _c.sent();
+                                        params = LiteMol.Core.Utils.extend({}, params, Schematic.DefaultCartoonsModelParameters);
+                                        switch (params.tessalation) {
+                                            case 0:
+                                                linearSegments = 2;
+                                                radialSements = 2;
+                                                break;
+                                            case 1:
+                                                linearSegments = 4;
+                                                radialSements = 3;
+                                                break;
+                                            case 2:
+                                                linearSegments = 6;
+                                                radialSements = 5;
+                                                break;
+                                            case 3:
+                                                linearSegments = 10;
+                                                radialSements = 8;
+                                                break;
+                                            case 4:
+                                                linearSegments = 12;
+                                                radialSements = 10;
+                                                break;
+                                            case 5:
+                                                linearSegments = 16;
+                                                radialSements = 14;
+                                                break;
+                                            default:
+                                                linearSegments = 18;
+                                                radialSements = 16;
+                                                break;
+                                        }
+                                        return [4 /*yield*/, Schematic.Geometry.create(model, atomIndices, linearSegments, {
+                                                radialSegmentCount: radialSements,
+                                                tessalation: +params.tessalation,
+                                                showDirectionCones: !!params.showDirectionCones
+                                            }, params.drawingType === CartoonsModelType.AlphaTrace, ctx)];
+                                    case 2:
+                                        cartoons = _c.sent();
+                                        ret = new Model();
+                                        ret.cartoons = cartoons;
+                                        ret.queryContext = queryContext;
+                                        ret.material = Visualization.MaterialsHelper.getMeshMaterial();
+                                        ret.gapMaterial = new Visualization.THREE.MeshPhongMaterial({ color: 0x777777, shading: Visualization.THREE.FlatShading });
+                                        ret.directionConeMaterial = new Visualization.THREE.MeshPhongMaterial({ color: 0x999999, shading: Visualization.THREE.FlatShading });
+                                        ret.pickMaterial = Visualization.MaterialsHelper.getPickMaterial();
+                                        if (props)
+                                            ret.props = props;
+                                        ret.entity = entity;
+                                        ret.cartoons.geometry.computeBoundingSphere();
+                                        ret.centroid = ret.cartoons.geometry.boundingSphere.center;
+                                        ret.radius = ret.cartoons.geometry.boundingSphere.radius;
+                                        obj = ret.createObjects();
+                                        ret.object = obj.main;
+                                        ret.pickObject = obj.pick;
+                                        ret.pickBufferAttributes = [ret.cartoons.pickGeometry.attributes.pColor];
+                                        ret.model = model;
+                                        ret.applyTheme(theme);
+                                        ret.disposeList.push(ret.cartoons, ret.material, ret.pickMaterial, ret.gapMaterial, ret.directionConeMaterial);
+                                        return [2 /*return*/, ret];
+                                }
+                            });
+                        }); });
+                    };
+                    return Model;
+                }(Visualization.Model));
+                Schematic.Model = Model;
+            })(Schematic = Molecule.Schematic || (Molecule.Schematic = {}));
+        })(Molecule = Visualization.Molecule || (Visualization.Molecule = {}));
+    })(Visualization = LiteMol.Visualization || (LiteMol.Visualization = {}));
+})(LiteMol || (LiteMol = {}));
+/*
+ * Copyright (c) 2016 - now David Sehnal, licensed under Apache 2.0, See LICENSE file for more info.
+ */
+var LiteMol;
+(function (LiteMol) {
+    var Visualization;
+    (function (Visualization) {
+        var Molecule;
+        (function (Molecule) {
+            var Schematic;
+            (function (Schematic) {
+                var Geometry;
+                (function (Geometry) {
+                    var ArrayBuilder = LiteMol.Core.Utils.ArrayBuilder;
+                    var CartoonAsymUnit = /** @class */ (function () {
+                        function CartoonAsymUnit(model, elements, linearSegmentCount) {
+                            this.model = model;
+                            this.elements = elements;
+                            this.linearSegmentCount = linearSegmentCount;
+                            this.tempA = new Visualization.THREE.Vector3();
+                            this.tempB = new Visualization.THREE.Vector3();
+                            this.tempC = new Visualization.THREE.Vector3();
+                            this.controlPoints = new Float32Array(0);
+                            this.torsionVectors = new Float32Array(0);
+                            this.normalVectors = new Float32Array(0);
+                            this.residueCount = 0;
+                            this.structureStarts = LiteMol.Core.Utils.FastSet.create();
+                            this.structureEnds = LiteMol.Core.Utils.FastSet.create();
+                            this.residueType = [];
+                            this.residueIndex = new Int32Array(0);
+                            this.backboneOnly = false;
+                            this.startResidueIndex = -1;
+                            this.endResidueIndex = -1;
+                            for (var _i = 0, _a = this.elements; _i < _a.length; _i++) {
+                                var e = _a[_i];
+                                this.residueCount += e.endResidueIndex - e.startResidueIndex;
+                            }
+                            this.startResidueIndex = this.elements[0].startResidueIndex;
+                            this.endResidueIndex = this.elements[this.elements.length - 1].endResidueIndex - 1;
+                            var builder = new ContolPointsBuilder(this.residueCount);
+                            this.controlPointsBuilder = ArrayBuilder.forVertex3D(this.residueCount * this.linearSegmentCount + 1);
+                            this.torsionVectorsBuilder = ArrayBuilder.forVertex3D(this.residueCount * this.linearSegmentCount + 1);
+                            this.normalVectorsBuilder = ArrayBuilder.forVertex3D(this.residueCount * this.linearSegmentCount + 1);
+                            this.createControlPoints(builder);
+                        }
+                        CartoonAsymUnit.prototype.createControlPoints = function (builder) {
+                            this.initPositions(builder);
+                            this.initControlsPoints(builder);
+                            this.computeSplines(builder);
+                            this.controlPoints = this.controlPointsBuilder.array;
+                            this.torsionVectors = this.torsionVectorsBuilder.array;
+                            this.normalVectors = this.normalVectorsBuilder.array;
+                            this.controlPointsBuilder = null;
+                            this.torsionVectorsBuilder = null;
+                            this.normalVectorsBuilder = null;
+                        };
+                        CartoonAsymUnit.prototype.initPositions = function (builder) {
+                            var residues = this.model.data.residues, atoms = this.model.data.atoms, positions = this.model.positions, arrays = { atomStartIndex: residues.atomStartIndex, atomEndIndex: residues.atomEndIndex, name: atoms.name, x: positions.x, y: positions.y, z: positions.z }, residueType = [], offset = 0, i = 0;
+                            var bbOnlyCount = 0, residueCount = 0;
+                            for (var _i = 0, _a = this.elements; _i < _a.length; _i++) {
+                                var e = _a[_i];
+                                this.structureStarts.add(e.startResidueIndex);
+                                this.structureEnds.add(e.endResidueIndex - 1);
+                                for (i = e.startResidueIndex; i < e.endResidueIndex; i++) {
+                                    residueCount++;
+                                    var bbOnly = builder.addResidue(i, arrays, e.type);
+                                    if (bbOnly && (e.type === 1 /* Helix */ || e.type === 3 /* Sheet */ || e.type === 5 /* Strand */)) {
+                                        bbOnlyCount++;
+                                    }
+                                    residueType[residueType.length] = e.type;
+                                }
+                            }
+                            this.backboneOnly = bbOnlyCount > (residueCount / 4 - 1);
+                            this.residueIndex = new Int32Array(this.residueCount);
+                            for (var _d = 0, _e = this.elements; _d < _e.length; _d++) {
+                                var e = _e[_d];
+                                for (i = e.startResidueIndex; i < e.endResidueIndex; i++) {
+                                    this.residueIndex[offset++] = i;
+                                }
+                            }
+                            this.residueType = residueType;
+                            builder.finishResidues();
+                            var len = this.residueCount;
+                            builder.residueType[0] = builder.residueType[2];
+                            builder.residueType[1] = builder.residueType[3];
+                            builder.residueType[builder.residueType.length - 2] = builder.residueType[builder.residueType.length - 4];
+                            builder.residueType[builder.residueType.length - 1] = builder.residueType[builder.residueType.length - 3];
+                            if (len > 2) {
+                                var a = 2, b = 3, c = 4;
+                                if (builder.residueType[0] !== 5 /* Strand */) {
+                                    this.reflectPositions(builder.uPositions, 0, 1, a, b, b, c, 0.4, 0.6);
+                                    this.reflectPositions(builder.vPositions, 0, 1, a, b, b, c, 0.4, 0.6);
+                                }
+                                else {
+                                    this.reflectPositions(builder.uPositions, 1, 0, a, b, b, c, 0.5, 0.5);
+                                    this.reflectPositions(builder.vPositions, 1, 0, a, b, b, c, 0.5, 0.5);
+                                }
+                                a = len + 1;
+                                b = len;
+                                c = len - 1;
+                                if (builder.residueType[len - 1] !== 5 /* Strand */) {
+                                    this.reflectPositions(builder.uPositions, len + 2, len + 3, a, b, b, c, 0.4, 0.6);
+                                    this.reflectPositions(builder.vPositions, len + 2, len + 3, a, b, b, c, 0.4, 0.6);
+                                }
+                                else {
+                                    this.reflectPositions(builder.uPositions, len + 2, len + 3, a, b, b, c, 0.5, 0.5);
+                                    this.reflectPositions(builder.vPositions, len + 2, len + 3, a, b, b, c, 0.5, 0.5);
+                                }
+                            }
+                            else if (len === 2) {
+                                for (i = 0; i < 2; i++) {
+                                    builder.uPositions[3 * i] = builder.uPositions[6];
+                                    builder.uPositions[3 * i + 1] = builder.uPositions[7];
+                                    builder.uPositions[3 * i + 2] = builder.uPositions[8];
+                                    builder.vPositions[3 * i] = builder.vPositions[6];
+                                    builder.vPositions[3 * i + 1] = builder.vPositions[7];
+                                    builder.vPositions[3 * i + 2] = builder.vPositions[8];
+                                    builder.uPositions[(len + 2) * 3 + 3 * i] = builder.uPositions[(len + 1) * 3];
+                                    builder.uPositions[(len + 2) * 3 + 3 * i + 1] = builder.uPositions[(len + 1) * 3 + 1];
+                                    builder.uPositions[(len + 2) * 3 + 3 * i + 2] = builder.uPositions[(len + 1) * 3 + 2];
+                                    builder.vPositions[(len + 2) * 3 + 3 * i] = builder.vPositions[(len + 1) * 3];
+                                    builder.vPositions[(len + 2) * 3 + 3 * i + 1] = builder.vPositions[(len + 1) * 3 + 1];
+                                    builder.vPositions[(len + 2) * 3 + 3 * i + 2] = builder.vPositions[(len + 1) * 3 + 2];
+                                }
+                            }
+                            else {
+                                var d = [builder.uPositions[6] - builder.vPositions[6],
+                                    builder.uPositions[7] - builder.vPositions[7],
+                                    builder.uPositions[8] - builder.vPositions[8]];
+                                for (var i_4 = 0; i_4 < 2; i_4++) {
+                                    for (var j = 0; j < 3; j++) {
+                                        builder.uPositions[3 * i_4 + j] = builder.uPositions[6 + j] - 0.5 * (i_4 + 1) * d[j];
+                                        builder.uPositions[9 + 3 * i_4 + j] = builder.uPositions[6 + j] + 0.5 * (i_4 + 1) * d[j];
+                                        builder.vPositions[3 * i_4 + j] = builder.vPositions[6 + j] + 0.5 * (i_4 + 1) * d[j];
+                                        builder.vPositions[9 + 3 * i_4 + j] = builder.vPositions[6 + j] - 0.5 * (i_4 + 1) * d[j];
+                                    }
+                                }
+                                //state.uPositions[0] = state.uPositions[6] - dx;
+                                //state.uPositions[9] = state.uPositions[6] - dx;                
+                                //console.log(state.uPositions, state.vPositions);
+                            }
+                        };
+                        CartoonAsymUnit.prototype.initControlsPoints = function (builder) {
+                            var previousD = new Visualization.THREE.Vector3(), len = builder.uvLength - 1, a = new Visualization.THREE.Vector3(), b = new Visualization.THREE.Vector3(), c = new Visualization.THREE.Vector3(), d = new Visualization.THREE.Vector3(), ca1 = new Visualization.THREE.Vector3(), o1 = new Visualization.THREE.Vector3(), ca2 = new Visualization.THREE.Vector3(), p = new Visualization.THREE.Vector3(), helixType = 1 /* Helix */;
+                            for (var i = 0; i < len; i++) {
+                                ca1.set(builder.uPositions[3 * i], builder.uPositions[3 * i + 1], builder.uPositions[3 * i + 2]);
+                                o1.set(builder.vPositions[3 * i], builder.vPositions[3 * i + 1], builder.vPositions[3 * i + 2]);
+                                i++;
+                                ca2.set(builder.uPositions[3 * i], builder.uPositions[3 * i + 1], builder.uPositions[3 * i + 2]);
+                                i--;
+                                p.set((ca1.x + ca2.x) / 2, (ca1.y + ca2.y) / 2, (ca1.z + ca2.z) / 2);
+                                a.subVectors(ca2, ca1);
+                                b.subVectors(o1, ca1);
+                                c.crossVectors(a, b);
+                                d.crossVectors(c, a);
+                                c.normalize();
+                                d.normalize();
+                                if (builder.residueType[i] === helixType && builder.residueType[i + 1] === helixType) {
+                                    p.set(p.x + 1.5 * c.x, p.y + 1.5 * c.y, p.z + 1.5 * c.z);
+                                }
+                                if (i > 0 && d.angleTo(previousD) > Math.PI / 2) {
+                                    d.negate();
+                                }
+                                previousD.copy(d);
+                                a.addVectors(p, d);
+                                builder.addControlPoint(p, a);
+                            }
+                            builder.finishContols();
+                        };
+                        CartoonAsymUnit.prototype.computeSplines = function (builder) {
+                            var previousControlPoint = new Visualization.THREE.Vector3(), controlPoint = new Visualization.THREE.Vector3(), torsionPoint = new Visualization.THREE.Vector3(), len = builder.residueCount, pPositions = builder.pPositions, dPositions = builder.dPositions, p1 = new Visualization.THREE.Vector3(), p2 = new Visualization.THREE.Vector3(), p3 = new Visualization.THREE.Vector3(), p4 = new Visualization.THREE.Vector3(), d1 = new Visualization.THREE.Vector3(), d2 = new Visualization.THREE.Vector3(), d3 = new Visualization.THREE.Vector3(), d4 = new Visualization.THREE.Vector3(), previousTorsionPoint = new Visualization.THREE.Vector3(), extrapolatedControlPoint = new Visualization.THREE.Vector3();
+                            for (var i = 0; i < len; i++) {
+                                p1.set(pPositions[3 * i], pPositions[3 * i + 1], pPositions[3 * i + 2]);
+                                i++;
+                                p2.set(pPositions[3 * i], pPositions[3 * i + 1], pPositions[3 * i + 2]);
+                                i++;
+                                p3.set(pPositions[3 * i], pPositions[3 * i + 1], pPositions[3 * i + 2]);
+                                i++;
+                                p4.set(pPositions[3 * i], pPositions[3 * i + 1], pPositions[3 * i + 2]);
+                                i = i - 3;
+                                d1.set(dPositions[3 * i], dPositions[3 * i + 1], dPositions[3 * i + 2]);
+                                i++;
+                                d2.set(dPositions[3 * i], dPositions[3 * i + 1], dPositions[3 * i + 2]);
+                                i++;
+                                d3.set(dPositions[3 * i], dPositions[3 * i + 1], dPositions[3 * i + 2]);
+                                i++;
+                                d4.set(dPositions[3 * i], dPositions[3 * i + 1], dPositions[3 * i + 2]);
+                                i = i - 3;
+                                for (var j = 1; j <= this.linearSegmentCount; j++) {
+                                    var t = j * 1.0 / this.linearSegmentCount;
+                                    if (t < 0.5) {
+                                        CartoonAsymUnit.spline(controlPoint, p1, p2, p3, t + 0.5);
+                                        CartoonAsymUnit.spline(torsionPoint, d1, d2, d3, t + 0.5);
+                                    }
+                                    else {
+                                        CartoonAsymUnit.spline(controlPoint, p2, p3, p4, t - 0.5);
+                                        CartoonAsymUnit.spline(torsionPoint, d2, d3, d4, t - 0.5);
+                                    }
+                                    if (i === 0 && j === 1) {
+                                        CartoonAsymUnit.spline(previousControlPoint, p1, p2, p3, 0.5);
+                                        CartoonAsymUnit.spline(previousTorsionPoint, d1, d2, d3, 0.5);
+                                        CartoonAsymUnit.reflect(extrapolatedControlPoint, previousControlPoint, controlPoint, 1);
+                                        this.addSplineNode(extrapolatedControlPoint, previousControlPoint, previousTorsionPoint);
+                                    }
+                                    this.addSplineNode(previousControlPoint, controlPoint, torsionPoint);
+                                    previousControlPoint.copy(controlPoint);
+                                }
+                            }
+                        };
+                        CartoonAsymUnit.prototype.addSplineNode = function (previousControlPoint, controlPoint, torsionPoint) {
+                            ArrayBuilder.add3(this.controlPointsBuilder, controlPoint.x, controlPoint.y, controlPoint.z);
+                            var torsionVector = this.tempA.subVectors(torsionPoint, controlPoint);
+                            torsionVector.normalize();
+                            ArrayBuilder.add3(this.torsionVectorsBuilder, torsionVector.x, torsionVector.y, torsionVector.z);
+                            var controlVector = this.tempB.subVectors(controlPoint, previousControlPoint);
+                            var normalVector = this.tempC.crossVectors(torsionVector, controlVector);
+                            normalVector.normalize();
+                            ArrayBuilder.add3(this.normalVectorsBuilder, normalVector.x, normalVector.y, normalVector.z);
+                        };
+                        CartoonAsymUnit.prototype.reflectPositions = function (xs, u, v, a, b, c, d, r1, r2) {
+                            this.tempA.set(xs[3 * a], xs[3 * a + 1], xs[3 * a + 2]);
+                            this.tempB.set(xs[3 * b], xs[3 * b + 1], xs[3 * b + 2]);
+                            CartoonAsymUnit.reflect(this.tempC, this.tempA, this.tempB, r1);
+                            xs[3 * u] = this.tempC.x;
+                            xs[3 * u + 1] = this.tempC.y;
+                            xs[3 * u + 2] = this.tempC.z;
+                            this.tempA.set(xs[3 * c], xs[3 * c + 1], xs[3 * c + 2]);
+                            this.tempB.set(xs[3 * d], xs[3 * d + 1], xs[3 * d + 2]);
+                            CartoonAsymUnit.reflect(this.tempC, this.tempA, this.tempB, r2);
+                            xs[3 * v] = this.tempC.x;
+                            xs[3 * v + 1] = this.tempC.y;
+                            xs[3 * v + 2] = this.tempC.z;
+                        };
+                        return CartoonAsymUnit;
+                    }());
+                    Geometry.CartoonAsymUnit = CartoonAsymUnit;
+                    (function (CartoonAsymUnit) {
+                        function reflect(target, p1, p2, amount) {
+                            target.set(p1.x - amount * (p2.x - p1.x), p1.y - amount * (p2.y - p1.y), p1.z - amount * (p2.z - p1.z));
+                        }
+                        CartoonAsymUnit.reflect = reflect;
+                        function spline(target, p1, p2, p3, t) {
+                            var a = Math.pow(1 - t, 2) / 2;
+                            var c = Math.pow(t, 2) / 2;
+                            var b = 1 - a - c;
+                            var x = a * p1.x + b * p2.x + c * p3.x;
+                            var y = a * p1.y + b * p2.y + c * p3.y;
+                            var z = a * p1.z + b * p2.z + c * p3.z;
+                            target.set(x, y, z);
+                        }
+                        CartoonAsymUnit.spline = spline;
+                        function maskSplit(element, mask, target) {
+                            var current = new LiteMol.Core.Structure.SecondaryStructureElement(element.type, element.startResidueId, element.endResidueId), start = element.startResidueIndex, end = element.endResidueIndex;
+                            for (var i = start; i < end; i++) {
+                                if (!mask[i])
+                                    continue;
+                                if (current.startResidueIndex !== i) {
+                                    current = new LiteMol.Core.Structure.SecondaryStructureElement(element.type, element.startResidueId, element.endResidueId);
+                                    current.startResidueIndex = i;
+                                }
+                                while (i < end && mask[i]) {
+                                    i++;
+                                }
+                                current.endResidueIndex = i;
+                                target[target.length] = current;
+                            }
+                        }
+                        CartoonAsymUnit.maskSplit = maskSplit;
+                        function isCartoonLike(atomIndices, start, end, name, a, b, isAmk) {
+                            var aU = false, aV = false, hasP = false;
+                            for (var i = start; i < end; i++) {
+                                var n = name[atomIndices[i]];
+                                if (!aU && n === a) {
+                                    aU = true;
+                                }
+                                else if (!aV && n === b) {
+                                    aV = true;
+                                }
+                                if (aU && aV)
+                                    return true;
+                                if (n === 'P') {
+                                    hasP = true;
+                                }
+                            }
+                            if (isAmk)
+                                return aU;
+                            return hasP;
+                        }
+                        CartoonAsymUnit.isCartoonLike = isCartoonLike;
+                        function createMask(model, atomIndices) {
+                            var ret = new Uint8Array(model.data.residues.count);
+                            var _a = model.data.atoms, residueIndex = _a.residueIndex, name = _a.name;
+                            var ssIndex = model.data.residues.secondaryStructureIndex;
+                            var ss = model.data.secondaryStructure;
+                            for (var i = 0, _b = atomIndices.length - 1; i < _b; i++) {
+                                var aI = atomIndices[i];
+                                var rStart = i;
+                                var residue = residueIndex[aI];
+                                i++;
+                                while (residue === residueIndex[atomIndices[i]])
+                                    i++;
+                                var s = ss[ssIndex[residue]].type;
+                                if (s === 0 /* None */)
+                                    continue;
+                                if (s === 5 /* Strand */) {
+                                    ret[residue] = +CartoonAsymUnit.isCartoonLike(atomIndices, rStart, i, name, "O5'", "C3'", false);
+                                }
+                                else {
+                                    ret[residue] = +CartoonAsymUnit.isCartoonLike(atomIndices, rStart, i, name, "CA", "O", true);
+                                }
+                                i--;
+                            }
+                            return ret;
+                        }
+                        CartoonAsymUnit.createMask = createMask;
+                        function isUnknownSecondaryStructure(model) {
+                            var hasSeq = false;
+                            for (var _i = 0, _a = model.data.secondaryStructure; _i < _a.length; _i++) {
+                                var e = _a[_i];
+                                if (e.type === 1 /* Helix */
+                                    || e.type === 3 /* Sheet */
+                                    || e.type === 2 /* Turn */) {
+                                    return false;
+                                }
+                                if (e.type === 4 /* AminoSeq */) {
+                                    hasSeq = true;
+                                }
+                            }
+                            return hasSeq;
+                        }
+                        function approximateSecondaryStructure(model, parent) {
+                            if (parent.type !== 4 /* AminoSeq */)
+                                return [parent];
+                            var elements = [];
+                            var name = model.data.atoms.name;
+                            var _a = model.data.residues, atomStartIndex = _a.atomStartIndex, atomEndIndex = _a.atomEndIndex;
+                            var trace = new Int32Array(parent.endResidueIndex - parent.startResidueIndex), offset = 0;
+                            var isOk = true;
+                            for (var i = parent.startResidueIndex, _b = parent.endResidueIndex; i < _b; i++) {
+                                var foundCA = false, foundO = false;
+                                for (var j = atomStartIndex[i], _c = atomEndIndex[i]; j < _c; j++) {
+                                    if (name[j] === 'CA') {
+                                        if (!foundCA)
+                                            trace[offset++] = j;
+                                        foundCA = true;
+                                    }
+                                    else if (name[j] === 'O') {
+                                        foundO = true;
+                                    }
+                                    if (foundO && foundCA)
+                                        break;
+                                }
+                                if (!foundCA || !foundO) {
+                                    isOk = false;
+                                    break;
+                                }
+                            }
+                            if (!isOk)
+                                return [parent];
+                            zhangSkolnickSStrace(model, trace, parent, elements);
+                            return elements;
+                        }
+                        var ZhangHelixDistance = [5.45, 5.18, 6.37];
+                        var ZhangHelixDelta = 2.1;
+                        var ZhangSheetDistance = [6.1, 10.4, 13.0];
+                        var ZhangSheetDelta = 1.42;
+                        var ZhangP1 = new Visualization.THREE.Vector3(0, 0, 0);
+                        var ZhangP2 = new Visualization.THREE.Vector3(0, 0, 0);
+                        function zhangSkolnickSStrace(model, trace, parent, elements) {
+                            var mask = new Int32Array(trace.length);
+                            var hasSS = false;
+                            var residueIndex = model.data.atoms.residueIndex;
+                            for (var i = 0, _l = trace.length; i < _l; i++) {
+                                if (zhangSkolnickSSresidue(model, trace, i, ZhangHelixDistance, ZhangHelixDelta)) {
+                                    mask[i] = 1 /* Helix */;
+                                    hasSS = true;
+                                }
+                                else if (zhangSkolnickSSresidue(model, trace, i, ZhangSheetDistance, ZhangSheetDelta)) {
+                                    mask[i] = 3 /* Sheet */;
+                                    hasSS = true;
+                                }
+                                else {
+                                    mask[i] = parent.type;
+                                }
+                            }
+                            if (!hasSS) {
+                                elements.push(parent);
+                                return;
+                            }
+                            // filter 1-length elements
+                            for (var i = 0, _l = mask.length; i < _l; i++) {
+                                var m = mask[i];
+                                if (m === parent.type)
+                                    continue;
+                                var j = i + 1;
+                                while (j < _l && m === mask[j]) {
+                                    j++;
+                                }
+                                if (j - i > 1) {
+                                    i = j - 1;
+                                    continue;
+                                }
+                                for (var k = i; k < j; k++)
+                                    mask[k] = parent.type;
+                                i = j - 1;
+                            }
+                            for (var i = 0, _l = mask.length; i < _l; i++) {
+                                var m = mask[i];
+                                var j = i + 1;
+                                while (j < _l && m === mask[j]) {
+                                    j++;
+                                }
+                                var e = new LiteMol.Core.Structure.SecondaryStructureElement(m, new LiteMol.Core.Structure.PolyResidueIdentifier('', i, null), new LiteMol.Core.Structure.PolyResidueIdentifier('', j, null));
+                                e.startResidueIndex = residueIndex[trace[i]];
+                                e.endResidueIndex = residueIndex[trace[j - 1]] + 1;
+                                elements.push(e);
+                                i = j - 1;
+                            }
+                        }
+                        function zhangSkolnickSSresidue(model, trace, i, distances, delta) {
+                            var len = trace.length;
+                            var _a = model.positions, x = _a.x, y = _a.y, z = _a.z;
+                            var u = ZhangP1, v = ZhangP2;
+                            for (var j = Math.max(0, i - 2); j <= i; j++) {
+                                for (var k = 2; k < 5; k++) {
+                                    if (j + k >= len) {
+                                        continue;
+                                    }
+                                    var a = trace[j], b = trace[j + k];
+                                    u.set(x[a], y[a], z[a]);
+                                    v.set(x[b], y[b], z[b]);
+                                    if (Math.abs(u.distanceTo(v) - distances[k - 2]) > delta) {
+                                        return false;
+                                    }
+                                }
+                            }
+                            return true;
+                        }
+                        function throwIfEmpty(ss) {
+                            if (ss.length === 0) {
+                                throw "Cartoons cannot be constructred from this model/selection.";
+                            }
+                        }
+                        function buildUnits(model, atomIndices, linearSegmentCount) {
+                            var mask = createMask(model, atomIndices);
+                            var ss = [];
+                            var isUnknownSS = isUnknownSecondaryStructure(model);
+                            for (var _i = 0, _a = model.data.secondaryStructure; _i < _a.length; _i++) {
+                                var e = _a[_i];
+                                if (isUnknownSS) {
+                                    var approx = approximateSecondaryStructure(model, e);
+                                    for (var _d = 0, approx_2 = approx; _d < approx_2.length; _d++) {
+                                        var f = approx_2[_d];
+                                        CartoonAsymUnit.maskSplit(f, mask, ss);
+                                    }
+                                }
+                                else {
+                                    CartoonAsymUnit.maskSplit(e, mask, ss);
+                                }
+                            }
+                            throwIfEmpty(ss);
+                            var previous = ss[0], asymId = model.data.residues.asymId, authSeqNumber = model.data.residues.authSeqNumber, currentElements = [], units = [], none = 0 /* None */;
+                            if (previous.type === none) {
+                                previous = null;
+                            }
+                            for (var _e = 0, ss_3 = ss; _e < ss_3.length; _e++) {
+                                var e = ss_3[_e];
+                                if (e.type === none) {
+                                    if (currentElements.length > 0) {
+                                        units.push(new CartoonAsymUnit(model, currentElements, linearSegmentCount));
+                                    }
+                                    previous = null;
+                                    currentElements = [];
+                                }
+                                else {
+                                    if (previous === null)
+                                        previous = e;
+                                    if (asymId[previous.endResidueIndex - 1] !== asymId[e.startResidueIndex]
+                                        || (previous !== e && authSeqNumber[e.startResidueIndex] - authSeqNumber[previous.endResidueIndex - 1] > 1)
+                                        || (previous.startResidueIndex !== e.startResidueIndex && (e.startResidueIndex - previous.endResidueIndex > 0))) {
+                                        if (currentElements.length > 0) {
+                                            units.push(new CartoonAsymUnit(model, currentElements, linearSegmentCount));
+                                        }
+                                        else if (previous !== null) {
+                                            units.push(new CartoonAsymUnit(model, [previous], linearSegmentCount));
+                                        }
+                                        previous = null;
+                                        currentElements = [e];
+                                    }
+                                    else {
+                                        currentElements[currentElements.length] = e;
+                                    }
+                                }
+                                previous = e;
+                            }
+                            if (currentElements.length > 0) {
+                                units.push(new CartoonAsymUnit(model, currentElements, linearSegmentCount));
+                            }
+                            return units; // [units[units.length - 1]];
+                        }
+                        CartoonAsymUnit.buildUnits = buildUnits;
+                    })(CartoonAsymUnit = Geometry.CartoonAsymUnit || (Geometry.CartoonAsymUnit = {}));
+                    var ContolPointsBuilder = /** @class */ (function () {
+                        function ContolPointsBuilder(residueCount) {
+                            this.typeBuilder = ArrayBuilder.forArray(10000);
+                            this.residueType = [];
+                            this.uPositions = new Float32Array(0);
+                            this.vPositions = new Float32Array(0);
+                            this.pPositions = new Float32Array(0);
+                            this.dPositions = new Float32Array(0);
+                            this.uvLength = 0;
+                            this.residueCount = 0;
+                            this.typeBuilder = ArrayBuilder.forArray(residueCount + 4);
+                            this.uPositionsBuilder = ArrayBuilder.forVertex3D(residueCount + 4);
+                            this.vPositionsBuilder = ArrayBuilder.forVertex3D(residueCount + 4);
+                            this.pPositionsBuilder = ArrayBuilder.forVertex3D(residueCount + 4);
+                            this.dPositionsBuilder = ArrayBuilder.forVertex3D(residueCount + 4);
+                            ArrayBuilder.add(this.typeBuilder, 0 /* None */);
+                            ArrayBuilder.add(this.typeBuilder, 0 /* None */);
+                            ArrayBuilder.add3(this.uPositionsBuilder, 0, 0, 0);
+                            ArrayBuilder.add3(this.uPositionsBuilder, 0, 0, 0);
+                            ArrayBuilder.add3(this.vPositionsBuilder, 0, 0, 0);
+                            ArrayBuilder.add3(this.vPositionsBuilder, 0, 0, 0);
+                        }
+                        ContolPointsBuilder.prototype.addResidue = function (rIndex, arrays, sType) {
+                            var start = arrays.atomStartIndex[rIndex], end = arrays.atomEndIndex[rIndex], aU = false, aV = false;
+                            var name = arrays.name;
+                            if (sType !== 5 /* Strand */) {
+                                for (var i = start; i < end; i++) {
+                                    if (!aU && name[i] === "CA") {
+                                        ArrayBuilder.add3(this.uPositionsBuilder, arrays.x[i], arrays.y[i], arrays.z[i]);
+                                        aU = true;
+                                    }
+                                    else if (!aV && name[i] === "O") {
+                                        ArrayBuilder.add3(this.vPositionsBuilder, arrays.x[i], arrays.y[i], arrays.z[i]);
+                                        aV = true;
+                                    }
+                                    if (aU && aV)
+                                        break;
+                                }
+                            }
+                            else {
+                                if (end - start === 1) {
+                                    // has to be P atom
+                                    ArrayBuilder.add3(this.uPositionsBuilder, arrays.x[start], arrays.y[start], arrays.z[start]);
+                                    aU = true;
+                                }
+                                else {
+                                    var pIndex = -1;
+                                    for (var i = start; i < end; i++) {
+                                        if (!aU && name[i] === "O5'") {
+                                            ArrayBuilder.add3(this.uPositionsBuilder, arrays.x[i], arrays.y[i], arrays.z[i]);
+                                            aU = true;
+                                        }
+                                        else if (!aV && name[i] === "C3'") {
+                                            ArrayBuilder.add3(this.vPositionsBuilder, arrays.x[i], arrays.y[i], arrays.z[i]);
+                                            aV = true;
+                                        }
+                                        if (name[i] === "P") {
+                                            pIndex = i;
+                                        }
+                                        if (aU && aV)
+                                            break;
+                                    }
+                                    if (!aU && !aV && pIndex >= 0) {
+                                        ArrayBuilder.add3(this.uPositionsBuilder, arrays.x[pIndex], arrays.y[pIndex], arrays.z[pIndex]);
+                                        aU = true;
+                                    }
+                                }
+                            }
+                            var backboneOnly = false;
+                            if (!aV) {
+                                var arr = this.uPositionsBuilder.array, len = arr.length;
+                                ArrayBuilder.add3(this.vPositionsBuilder, arr[len - 3], arr[len - 2], arr[len - 1]);
+                                backboneOnly = true;
+                            }
+                            else if (!aU) {
+                                var arr = this.vPositionsBuilder.array, len = arr.length;
+                                ArrayBuilder.add3(this.uPositionsBuilder, arr[len - 3], arr[len - 2], arr[len - 1]);
+                                backboneOnly = true;
+                            }
+                            ArrayBuilder.add(this.typeBuilder, sType);
+                            return backboneOnly;
+                        };
+                        ContolPointsBuilder.prototype.finishResidues = function () {
+                            ArrayBuilder.add(this.typeBuilder, 0 /* None */);
+                            ArrayBuilder.add(this.typeBuilder, 0 /* None */);
+                            ArrayBuilder.add3(this.uPositionsBuilder, 0, 0, 0);
+                            ArrayBuilder.add3(this.uPositionsBuilder, 0, 0, 0);
+                            ArrayBuilder.add3(this.vPositionsBuilder, 0, 0, 0);
+                            ArrayBuilder.add3(this.vPositionsBuilder, 0, 0, 0);
+                            this.residueType = this.typeBuilder.array;
+                            this.uPositions = this.uPositionsBuilder.array;
+                            this.vPositions = this.vPositionsBuilder.array;
+                            this.typeBuilder = null;
+                            this.uPositionsBuilder = null;
+                            this.vPositionsBuilder = null;
+                            this.uvLength = this.residueType.length;
+                            this.residueCount = this.uvLength - 4;
+                        };
+                        ContolPointsBuilder.prototype.addControlPoint = function (p, d) {
+                            ArrayBuilder.add3(this.pPositionsBuilder, p.x, p.y, p.z);
+                            ArrayBuilder.add3(this.dPositionsBuilder, d.x, d.y, d.z);
+                        };
+                        ContolPointsBuilder.prototype.finishContols = function () {
+                            this.pPositions = this.pPositionsBuilder.array;
+                            this.dPositions = this.dPositionsBuilder.array;
+                            this.pPositionsBuilder = null;
+                            this.dPositionsBuilder = null;
+                        };
+                        return ContolPointsBuilder;
+                    }());
+                })(Geometry = Schematic.Geometry || (Schematic.Geometry = {}));
+            })(Schematic = Molecule.Schematic || (Molecule.Schematic = {}));
         })(Molecule = Visualization.Molecule || (Visualization.Molecule = {}));
     })(Visualization = LiteMol.Visualization || (LiteMol.Visualization = {}));
 })(LiteMol || (LiteMol = {}));
@@ -74764,14 +76357,21 @@ var LiteMol;
                     'Calpha': { label: 'C-\u03B1 Trace', shortLabel: 'C-\u03B1' },
                     'BallsAndSticks': { label: 'Balls and Sticks', shortLabel: "B'n'S" },
                     'VDWBalls': { label: 'VDW Balls', shortLabel: 'VDW' },
-                    'Surface': { label: 'Surface', shortLabel: 'Surface' }
+                    'Surface': { label: 'Surface', shortLabel: 'Surface' },
+                    //schematic
+                    'Schematic': { label: 'Schematic', shortLabel: 'Schematic' }
                 };
-                Molecule.Types = ['Cartoons', 'Calpha', 'BallsAndSticks', 'VDWBalls', 'Surface'];
+                //added schematic type
+                Molecule.Types = ['Cartoons', 'Calpha', 'BallsAndSticks', 'VDWBalls', 'Surface', 'Schematic'];
                 Molecule.DetailTypes = ['Automatic', 'Very Low', 'Low', 'Medium', 'High', 'Very High'];
                 var Default;
                 (function (Default) {
                     Default.DetailParams = { detail: 'Automatic' };
                     Default.CartoonParams = {
+                        showDirectionCone: false,
+                        detail: 'Automatic'
+                    };
+                    Default.SchematicParams = {
                         showDirectionCone: false,
                         detail: 'Automatic'
                     };
@@ -74795,6 +76395,8 @@ var LiteMol;
                     Default.ForType = (function () {
                         var types = {
                             'Cartoons': { type: 'Cartoons', params: Default.CartoonParams, theme: { template: Default.CartoonThemeTemplate, colors: Default.CartoonThemeTemplate.colors, transparency: Default.Transparency, interactive: true } },
+                            //schematic
+                            'Schematic': { type: 'Schematic', params: Default.SchematicParams, theme: { template: Default.CartoonThemeTemplate, colors: Default.CartoonThemeTemplate.colors, transparency: Default.Transparency, interactive: true } },
                             'Calpha': { type: 'Calpha', params: { detail: 'Automatic' }, theme: { template: Default.CartoonThemeTemplate, colors: Default.CartoonThemeTemplate.colors, transparency: Default.Transparency, interactive: true } },
                             'BallsAndSticks': { type: 'BallsAndSticks', params: Default.BallsAndSticksParams, theme: { template: Default.ElementSymbolThemeTemplate, colors: Default.ElementSymbolThemeTemplate.colors, transparency: Default.Transparency, interactive: true } },
                             'VDWBalls': { type: 'VDWBalls', params: { detail: 'Automatic' }, theme: { template: Default.ElementSymbolThemeTemplate, colors: Default.ElementSymbolThemeTemplate.colors, transparency: Default.Transparency, interactive: true } },
@@ -74828,6 +76430,9 @@ var LiteMol;
                 var MolVis = LiteMol.Visualization.Molecule;
                 function getTessalation(type, count) {
                     if (type === 'Automatic') {
+                        //SCHEMATIC
+                        if (count < 150)
+                            return 6;
                         if (count < 250)
                             return 5;
                         if (count < 1000)
@@ -74864,6 +76469,16 @@ var LiteMol;
                         drawingType: isAlphaTrace
                             ? MolVis.Cartoons.CartoonsModelType.AlphaTrace
                             : MolVis.Cartoons.CartoonsModelType.Default,
+                        showDirectionCones: showCones
+                    };
+                }
+                //SCHEMATIC
+                function createSchematicParams(tessalation, isAlphaTrace, showCones) {
+                    return {
+                        tessalation: tessalation,
+                        drawingType: isAlphaTrace
+                            ? MolVis.Schematic.CartoonsModelType.AlphaTrace
+                            : MolVis.Schematic.CartoonsModelType.Default,
                         showDirectionCones: showCones
                     };
                 }
@@ -74927,6 +76542,9 @@ var LiteMol;
                             return Vis.Molecule.BallsAndSticks.Model.create(source, { model: model, atomIndices: atomIndices, theme: theme, params: createBallsAndSticksParams(tessalation, model, style.params) });
                         case 'VDWBalls':
                             return Vis.Molecule.BallsAndSticks.Model.create(source, { model: model, atomIndices: atomIndices, theme: theme, params: createVDWBallsParams(tessalation, model) });
+                        // SCHEMATIC
+                        case 'Schematic':
+                            return MolVis.Schematic.Model.create(source, { model: model, atomIndices: atomIndices, theme: theme, queryContext: Bootstrap.Utils.Molecule.findQueryContext(source), params: createSchematicParams(tessalation, false, style.params.showDirectionCone) });
                         default:
                             return void 0;
                     }
@@ -80311,6 +81929,15 @@ var LiteMol;
                                 Plugin.React.createElement(Plugin.Controls.OptionsGroup, { key: 1, options: LiteMol.Bootstrap.Visualization.Molecule.DetailTypes, caption: function (s) { return s; }, current: p.detail, onChange: function (o) { return _this.controller.updateStyleParams({ detail: o }); }, label: 'Detail' })
                             ];
                         };
+                        //SCHEMATIC
+                        CreateVisual.prototype.schematic = function () {
+                            var _this = this;
+                            var p = this.params.style.params;
+                            return [
+                                Plugin.React.createElement(Plugin.Controls.Toggle, { key: 0, onChange: function (v) { return _this.controller.updateStyleParams({ showDirectionCone: v }); }, value: p.showDirectionCone, label: 'Dir. Cones' }),
+                                Plugin.React.createElement(Plugin.Controls.OptionsGroup, { key: 1, options: LiteMol.Bootstrap.Visualization.Molecule.DetailTypes, caption: function (s) { return s; }, current: p.detail, onChange: function (o) { return _this.controller.updateStyleParams({ detail: o }); }, label: 'Detail' })
+                            ];
+                        };
                         CreateVisual.prototype.ballsAndSticks = function () {
                             var _this = this;
                             var p = this.params.style.params;
@@ -80369,6 +81996,10 @@ var LiteMol;
                                     break;
                                 case 'Cartoons':
                                     controls = this.cartoons();
+                                    break;
+                                //SCHEMATIC
+                                case 'Schematic':
+                                    controls = this.schematic();
                                     break;
                                 default:
                                     controls = this.detail();

@@ -10,7 +10,9 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
     import MolVis = LiteMol.Visualization.Molecule;
     
     function getTessalation(type: DetailType, count: number) {
-        if (type === 'Automatic') {        
+        if (type === 'Automatic') { 
+            //SCHEMATIC
+            if (count< 150) return 6;       
             if (count < 250) return 5;
             if (count < 1000) return 4;
             if (count < 75000) return 3;
@@ -41,6 +43,16 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
             drawingType: isAlphaTrace
                 ? MolVis.Cartoons.CartoonsModelType.AlphaTrace
                 : MolVis.Cartoons.CartoonsModelType.Default,
+            showDirectionCones: showCones
+        };
+    }
+    //SCHEMATIC
+    function createSchematicParams(tessalation: number, isAlphaTrace: boolean, showCones: boolean): MolVis.Schematic.Parameters {
+        return { 
+            tessalation,
+            drawingType: isAlphaTrace
+                ? MolVis.Schematic.CartoonsModelType.AlphaTrace
+                : MolVis.Schematic.CartoonsModelType.Default,
             showDirectionCones: showCones
         };
     }
@@ -109,6 +121,9 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
                 return Vis.Molecule.BallsAndSticks.Model.create(source, { model, atomIndices, theme, params: createBallsAndSticksParams(tessalation, model, style.params as BallsAndSticksParams) });
             case 'VDWBalls':
                 return Vis.Molecule.BallsAndSticks.Model.create(source, { model, atomIndices, theme, params: createVDWBallsParams(tessalation, model) });
+           // SCHEMATIC
+                case 'Schematic':
+                    return MolVis.Schematic.Model.create(source,{model, atomIndices,theme,queryContext: Utils.Molecule.findQueryContext(source),params: createSchematicParams(tessalation, false, (style.params as SchematicParams).showDirectionCone)});
             default:
                 return void 0;
         }
