@@ -158,8 +158,8 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                     case Core.Structure.SecondaryStructureType.Helix:
                         
 
-                        builder.addTube(unit, state, params.helixWidth, params.helixHeight /*, 1*/);
-                        if (start) {
+                        /*builder.addTube(unit, state, params.helixWidth, params.helixHeight /*, 1);*/
+                        /*if (start) {
                             builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, true, false);
                         } else if (end) {
                             builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, false, true);
@@ -170,7 +170,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                         if (start || end) {
                             builder.addSheetCap(unit, state, start, end);
                         }
-                        break; 
+                        break; */
                     case Core.Structure.SecondaryStructureType.Strand:
                        /* builder.addTube(unit, state, params.strandWidth, params.strandWidth /*, 
                             builder.hasP(unit.residueIndex[index], ctx.strandArrays)  ? params.nucleotideStrandFactor : 1*/ /*); 
@@ -385,133 +385,47 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                /* for (j = 0; j < radialSegmentCount; j++) {
                     let t = 2 * Math.PI * j / radialSegmentCount;
                     //let t = 2 * Math.PI * j / radialSegmentCount;
-                const x = r * Math.cos(t);
-                const y = r * Math.sin (t);
+                    const x = r * Math.cos(t);
+                    const y = r * Math.sin (t)
                     a.copy(u);
                     b.copy(v);
                     radialVector.addVectors(a.multiplyScalar(x * Math.cos(t)), b.multiplyScalar(y * Math.sin(t)));
                     radialVector.addVectors(a.multiplyScalar(x* Math.cos(t)), b.multiplyScalar(y * Math.sin(t)));
-
-                   a.copy(u);
-                   b.copy(v);
-                   normalVector.addVectors(a.multiplyScalar(y *Math.cos(t)), b.multiplyScalar(x* Math.sin(t)));
-                   normalVector.normalize();
+                    a.copy(u);
+                    b.copy(v);
+                    normalVector.addVectors(a.multiplyScalar(y *Math.cos(t)), b.multiplyScalar(x* Math.sin(t)));
+                    normalVector.normalize();
 
                     this.setVector(elementPoints, i, tempPos);
                     tempPos.add(radialVector);
-*/
-var cylinder = THREE.CylinderGeometry;
+                */
+                
 
-//const tt = di * (i - elementOffsetStart) - 0.5;
-//const tt = (elementOffsetEnd - elementOffsetStart);
-
-//const ff = Math.cos (2*Math.PI*tt);
-//const ff = /*1 + (waveFactor - 1) */ (Math.cos(2 * Math.PI /* tt*/) + 1);
-//const volume = Math.PI * (width/2) * height;
-let params = state.params; 
-const w = params.helixWidth, h = /*ff * */ params.helixHeight;
-const r = width/2;
-             
-const volume = Math.PI * Math.pow(r, 2) * height;
-
-for (j = 0; j < radialSegmentCount; j++) {
-    let t = 2 * Math.PI * j / radialSegmentCount;
-    //let t = Math.atan2(h,w);
-    //let t = Math.atan2 (j,i);
-
-    a.copy(u);
-    b.copy(v);
-    radialVector =a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t));
-
-    a.copy(u);
-    b.copy(v);
-    normalVector.addVectors(a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t)));
-    normalVector.normalize();
-
-    
-
-    this.setVector(elementPoints, i, tempPos);
-    tempPos.add(radialVector);
+               
+                
+                let params = state.params; 
+                const w = params.helixWidth, h = /*ff * */ params.helixHeight;
+                const r = width/2;
+                const volume = Math.PI * Math.pow(r, 2) * height;
+                 for (j = 0; j < radialSegmentCount; j++) {
+                     //let t = 2 * Math.PI;
+                     let t = 2 * Math.PI * j / radialSegmentCount;
+                     a.copy(u);
+                     b.copy(v);
+                     radialVector.addVectors(a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t)));
+                     a.copy(u);
+                     b.copy(v);
+                     normalVector.addVectors(a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t)));
+                     normalVector.normalize();
+                
+                     this.setVector(elementPoints, i, tempPos);
+                     tempPos.add(normalVector);
 
 
-                    state.addVertex(tempPos, radialVector);
+                     state.addVertex(tempPos, normalVector);
 
-                    /*this.setVector(torsionVectors, i, horizontalVector);
-                    horizontalVector.multiplyScalar(r);
-                    tempPos.add(horizontalVector);
-
-
-                    state.addVertex(tempPos, horizontalVector);*/
-
-
-
-    /*                this.setVector(torsionVectors, i, horizontalVector);
-                    horizontalVector.multiplyScalar(w);
-    
-                    this.setVector(normalVectors, i, verticalVector);
-                    verticalVector.multiplyScalar(h); 
-    
-                    normalOffset.set(0, 0, 0);
-    
-                        normalOffset.crossVectors(a, b).multiplyScalar(elementOffsetEnd-elementOffsetStart);
-                    }
-    
-                    this.setVector(elementPoints, i, positionVector);
-                    this.setVector(normalVectors, i, normalVector);
-                    this.setVector(torsionVectors, i, torsionVector);
-    
-                    a.copy(positionVector).add(horizontalVector).add(verticalVector);
-                    b.copy(normalVector);
-                    state.addVertex(a, b);
-    
-                    a.copy(positionVector).sub(horizontalVector).add(verticalVector);
-                    state.addVertex(a, b);
-    
-                    a.copy(positionVector).sub(horizontalVector).add(verticalVector);
-                    b.copy(torsionVector).negate().add(normalOffset);
-                    state.addVertex(a, b);
-    
-                    a.copy(positionVector).sub(horizontalVector).sub(verticalVector);
-                    state.addVertex(a, b);
-    
-                    a.copy(positionVector).sub(horizontalVector).sub(verticalVector);
-                    b.copy(normalVector).negate();
-                    state.addVertex(a, b);
-    
-                    a.copy(positionVector).add(horizontalVector).sub(verticalVector);
-                    state.addVertex(a, b);
-    
-                    a.copy(positionVector).add(horizontalVector).sub(verticalVector);
-                    b.copy(torsionVector).add(normalOffset);
-                    state.addVertex(a, b);
-    
-                    a.copy(positionVector).add(horizontalVector).add(verticalVector);
-                    state.addVertex(a, b);
-                    let t = 2 * Math.PI * j / radialSegmentCount;
-                    normalVector.addVectors(a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t)));
-    normalVector.normalize();
-
-    
-
-    this.setVector(elementPoints, i, tempPos);
-    tempPos.add(normalVector);
-
-
-                    state.addVertex(tempPos, normalVector);
-
-                    this.setVector(elementPoints, i, tempPos);
-    tempPos.add(verticalVector);
-
-
-                    state.addVertex(tempPos, radialVector);
-
-                    
-} */
-
-
-
-}
-}
+                 }
+             }
 
                     
                 
