@@ -4,24 +4,26 @@
 
 namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
     export class SchematicGeometryParams {
-        radialSegmentCount = 1;
-        heightSegmentCount = 1;
+        radialSegmentCount = 10;
+        //heightSegmentCount = 1;
 
-        turnWidth = 1;
+        turnWidth = 0.1;
 
-        strandWidth = 0.5;
+        strandWidth = 0.15;
         
         nucleotideStrandLineWidth = 0.15;
         nucleotideStrandFactor = 3;
-
-        helixWidth = 2;
+        
+        helixWidth1 = 10;
+        helixHeight1 = 0.1;
+        helixWidth = 1.1;
         helixHeight = 0.1;
 
-        sheetWidth = 0.3;
+        sheetWidth = 1.1;
         sheetHeight = 0.1;
 
-        arrowWidth = 2;
-        tessalation = 5;
+        arrowWidth = 1.7;
+        tessalation = 8;
 
         static Default = new SchematicGeometryParams();
     }
@@ -123,8 +125,8 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
             if (ctx.isTrace || unit.backboneOnly) {
                 switch (unit.residueType[index]) {
                     case Core.Structure.SecondaryStructureType.Strand:
-                       /* builder.addTube(unit, state, params.strandWidth, params.strandWidth /*, 
-                            builder.hasP(unit.residueIndex[index], ctx.strandArrays) ? params.nucleotideStrandFactor : 1*/ /*);
+                       builder.addTube(unit, state, params.strandWidth, params.strandWidth, 
+                            builder.hasP(unit.residueIndex[index], ctx.strandArrays) ? params.nucleotideStrandFactor : 1);
                         if (start || end) {
                             builder.addTubeCap(unit, state,  params.strandWidth, params.strandWidth, start, end);
                         }
@@ -133,7 +135,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                             makeStrandLineTemplate(ctx);
                         }
                         builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
-                        break; */
+                         
 
                         builder.addSheet(unit, state, start, end);
                         if (start || end) {
@@ -147,7 +149,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                         break;
 
                     default:
-                        builder.addTube(unit, state, params.turnWidth, params.turnWidth /*, 1*/ );
+                        builder.addTube(unit, state, params.turnWidth, params.turnWidth , 1);
                         if (start || end) {
                             builder.addTubeCap(unit, state, params.turnWidth, params.turnWidth, start, end);
                         }
@@ -156,27 +158,32 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
             } else {
                 switch (unit.residueType[index]) {
                     case Core.Structure.SecondaryStructureType.Helix:
-                        
-
+                        builder.addCylinder(unit, state, start, end, params.helixWidth1, params.helixHeight1);
+                        if (start) {
+                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, true, false);
+                        } else if (end) {
+                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, false, true);
+                        }
+                        break; 
                         /*builder.addTube(unit, state, params.helixWidth, params.helixHeight /*, 1);*/
                         /*if (start) {
                             builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, true, false);
                         } else if (end) {
                             builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, false, true);
                         }
-                        break; 
+                        break; */
                         case Core.Structure.SecondaryStructureType.Sheet:
                         builder.addSheet(unit, state, start, end);
                         if (start || end) {
                             builder.addSheetCap(unit, state, start, end);
                         }
-                        break; */
+                        break; 
                     case Core.Structure.SecondaryStructureType.Strand:
-                       /* builder.addTube(unit, state, params.strandWidth, params.strandWidth /*, 
-                            builder.hasP(unit.residueIndex[index], ctx.strandArrays)  ? params.nucleotideStrandFactor : 1*/ /*); 
+                         builder.addTube(unit, state, params.strandWidth, params.strandWidth, 
+                            builder.hasP(unit.residueIndex[index], ctx.strandArrays)  ? params.nucleotideStrandFactor : 1); 
                         if (start || end) {
                             builder.addTubeCap(unit, state, params.strandWidth, params.strandWidth, start, end);
-                        } */
+                        } 
                         builder.addSheet(unit, state, start, end);
                         if (start || end) {
                             builder.addSheetCap(unit, state, start, end);
@@ -189,7 +196,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                         break;
 
                     default:
-                        builder.addTube(unit, state, params.turnWidth, params.turnWidth /*, 1*/);
+                        builder.addTube(unit, state, params.turnWidth, params.turnWidth, 1);
                         if (start || end) {
                             builder.addTubeCap(unit, state, params.turnWidth, params.turnWidth, start, end);
                         }
@@ -351,99 +358,129 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
         }
         
         
-        addTube(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number /*, waveFactor: number*/) {
+        addTube(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number , waveFactor: number) {
             let verticesDone = state.verticesDone,
-                i = 0, j = 0,
-                radialVector = this.tempVectors[0], normalVector = this.tempVectors[1],
-                tempPos = this.tempVectors[2], a = this.tempVectors[3], b = this.tempVectors[4], u = this.tempVectors[5], v = this.tempVectors[6],
-                horizontalVector = this.tempVectors[7], verticalVector = this.tempVectors [8], positionVector = this.tempVectors[9],
-                normalOffset = this.tempVectors[10], torsionVector = this.tempVectors[11],
-                elementOffsetStart = state.residueIndex * element.linearSegmentCount,
-                elementOffsetEnd = elementOffsetStart + element.linearSegmentCount,
-                elementPoints = element.controlPoints,
-                elementPointsCount = element.linearSegmentCount + 1,
+            i = 0, j = 0,
+            radialVector = this.tempVectors[0], normalVector = this.tempVectors[1],
+            tempPos = this.tempVectors[2], a = this.tempVectors[3], b = this.tempVectors[4], u = this.tempVectors[5], v = this.tempVectors[6],
             
-                torsionVectors = element.torsionVectors,
-                normalVectors = element.normalVectors,
-                radialSegmentCount = state.params.radialSegmentCount;
+            elementOffsetStart = state.residueIndex * element.linearSegmentCount,
+            elementOffsetEnd = elementOffsetStart + element.linearSegmentCount,
+            elementPoints = element.controlPoints,
+            elementPointsCount = element.linearSegmentCount + 1,
+            torsionVectors = element.torsionVectors,
+            normalVectors = element.normalVectors,
+            radialSegmentCount = state.params.radialSegmentCount;
 
-           const di = 1 / (elementOffsetEnd - elementOffsetStart);
+        const di = 1 / (elementOffsetEnd - elementOffsetStart);
 
-            for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
-                this.setVector(torsionVectors, i, u);
-                this.setVector(normalVectors, i, v);
-                const tt = di * (i - elementOffsetStart);
-                const ff = (Math.cos(2 * Math.PI * tt));
-              /* const tt = di * (i - elementOffsetStart) - 0.5;
-                
-                const ff = 1 + (waveFactor - 1) * (Math.cos(2 * Math.PI * tt) + 1);
-                //const ff =(Math.cos(2 * Math.PI * tt)); 
-                
-                
+        for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
+            this.setVector(torsionVectors, i, u);
+            this.setVector(normalVectors, i, v);
 
-               
-               /* for (j = 0; j < radialSegmentCount; j++) {
-                    let t = 2 * Math.PI * j / radialSegmentCount;
-                    //let t = 2 * Math.PI * j / radialSegmentCount;
-                    const x = r * Math.cos(t);
-                    const y = r * Math.sin (t)
-                    a.copy(u);
-                    b.copy(v);
-                    radialVector.addVectors(a.multiplyScalar(x * Math.cos(t)), b.multiplyScalar(y * Math.sin(t)));
-                    radialVector.addVectors(a.multiplyScalar(x* Math.cos(t)), b.multiplyScalar(y * Math.sin(t)));
-                    a.copy(u);
-                    b.copy(v);
-                    normalVector.addVectors(a.multiplyScalar(y *Math.cos(t)), b.multiplyScalar(x* Math.sin(t)));
-                    normalVector.normalize();
+            const tt = di * (i - elementOffsetStart) - 0.5;
+            const ff = 1 + (waveFactor - 1) * (Math.cos(2 * Math.PI * tt) + 1);
+            const w = ff * width, h = ff * height;
 
-                    this.setVector(elementPoints, i, tempPos);
-                    tempPos.add(radialVector);
-                */
-                
+            for (j = 0; j < radialSegmentCount; j++) {
+                let t = 2 * Math.PI * j / radialSegmentCount;
 
-               
-                
-                let params = state.params; 
-                const w = params.helixWidth, h = /*ff * */ params.helixHeight;
-                const r = width/2;
-                const volume = Math.PI * Math.pow(r, 2) * height;
-                 for (j = 0; j < radialSegmentCount; j++) {
-                     //let t = 2 * Math.PI;
-                     let t = 2 * Math.PI * j / radialSegmentCount;
-                     a.copy(u);
-                     b.copy(v);
-                     radialVector.addVectors(a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t)));
-                     a.copy(u);
-                     b.copy(v);
-                     normalVector.addVectors(a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t)));
-                     normalVector.normalize();
-                
-                     this.setVector(elementPoints, i, tempPos);
-                     tempPos.add(normalVector);
+                a.copy(u);
+                b.copy(v);
+                radialVector.addVectors(a.multiplyScalar(w * Math.cos(t)), b.multiplyScalar(h * Math.sin(t)));
+
+                a.copy(u);
+                b.copy(v);
+                normalVector.addVectors(a.multiplyScalar(h * Math.cos(t)), b.multiplyScalar(w * Math.sin(t)));
+                normalVector.normalize();
+
+                this.setVector(elementPoints, i, tempPos);
+                tempPos.add(radialVector);
 
 
-                     state.addVertex(tempPos, normalVector);
-
-                 }
-             }
-
-                    
-                
-            
-
-            for (i = 0; i < elementPointsCount - 1; i++) {
-                for (j = 0; j < radialSegmentCount; j++) {
-                    state.addTriangles(
-                        (verticesDone + i * radialSegmentCount +j),
-                        (verticesDone + (i + 1) * radialSegmentCount + (j + 1)),
-                        (verticesDone + i * radialSegmentCount + (j + 1) ),
-
-                        (verticesDone + i * radialSegmentCount + j),
-                        (verticesDone + (i + 1) * radialSegmentCount + j),
-                        (verticesDone + (i +1) * radialSegmentCount + (j + 1)));
-                }
+                state.addVertex(tempPos, normalVector);
             }
         }
+
+        for (i = 0; i < elementPointsCount - 1; i++) {
+            for (j = 0; j < radialSegmentCount; j++) {
+                state.addTriangles(
+                    (verticesDone + i * radialSegmentCount + j),
+                    (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount),
+                    (verticesDone + i * radialSegmentCount + (j + 1) % radialSegmentCount),
+
+                    (verticesDone + i * radialSegmentCount + j),
+                    (verticesDone + (i + 1) * radialSegmentCount + j),
+                    (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount));
+            }
+        }
+        }
+
+        addCylinder (element:CartoonAsymUnit,state:SchematicGeometryState, isStart:boolean, isEnd:boolean, width:number, height:number) {
+            let verticesDone = state.verticesDone,
+                i = 0, j = 0,
+                horizontalVector = this.tempVectors[0], normalVector = this.tempVectors[1],a = this.tempVectors[2], b = this.tempVectors[3], u = this.tempVectors[4],
+                 v = this.tempVectors[5], radialVector = this.tempVectors[6], tempPos = this.tempVectors[7], tempPos1 = this.tempVectors[8],
+                  tempPos2 = this.tempVectors[8], verticalVector = this.tempVectors[9],
+                elementOffsetStart = state.residueIndex * element.linearSegmentCount,
+                elementPoints = element.controlPoints,
+                elementPointsCount = element.linearSegmentCount + 1,
+                normalVectors = element.normalVectors,
+                elementOffsetEnd = elementOffsetStart + element.linearSegmentCount,
+                torsionVectors = element.torsionVectors,
+                radialSegmentCount = state.params.radialSegmentCount;
+
+                for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
+                    
+    
+                    this.setVector(torsionVectors, i, horizontalVector);
+                    horizontalVector.multiplyScalar(width);
+    
+                    this.setVector(normalVectors, i, verticalVector);
+                    verticalVector.multiplyScalar(height); 
+                    let t = 2 * Math.PI *i / radialSegmentCount;
+                    const r = width/2;
+                    a.copy(u);
+                    b.copy(v);
+                    radialVector.addVectors(a.multiplyScalar(Math.cos(t) * width), b.multiplyScalar(Math.sin(t) * width));
+                    
+                    this.setVector(elementPoints, i, tempPos);
+                    radialVector.add(tempPos);
+                    //tempPos.add (radialVector);
+
+
+
+                    
+                     
+        
+                  }
+                         for (i = 0; i < elementPointsCount - 1; i++) {
+                             for (j = 0; j < radialSegmentCount; j++) {
+                                  state.addTriangles(
+                                  (verticesDone + i * radialSegmentCount +j),
+                                  (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount),
+                                  (verticesDone + i * radialSegmentCount + (j + 1) % radialSegmentCount ),
+        
+                                  (verticesDone + i * radialSegmentCount + j),
+                                  (verticesDone + (i + 1) * radialSegmentCount + j),
+                                  (verticesDone + (i +1) * radialSegmentCount + (j + 1) % radialSegmentCount));
+
+                                  
+                            }
+                         }
+                
+                 
+                 
+                 
+             }
+
+
+
+
+
+
+
+        
 
         addTubeCap(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number, isStart: boolean, isEnd: boolean) {
             let verticesDone = state.verticesDone,
@@ -477,7 +514,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
             this.setVector(normalVectors, offset, v);
             for (let i = 0; i < radialSegmentCount; i++) {
                 t = 2 * Math.PI * i / radialSegmentCount;
-                 const r = width/2;
+                let r = width/2;
                 a.copy(u);
                 b.copy(v);
                 radialVector.addVectors(a.multiplyScalar(Math.cos(t) * r), b.multiplyScalar(Math.sin(t) * r));
@@ -510,13 +547,12 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                 elementPoints = element.controlPoints,
                 torsionVectors = element.torsionVectors,
                 normalVectors = element.normalVectors,
-                /*elementPointsCount = element.linearSegmentCount + 1,
-                radialSegmentCount = state.params.radialSegmentCount,*/
+                
 
                 
                 offsetLength = 0, actualWidth = 0;
 
-            normalOffset.set(0, 0, 0);
+                normalOffset.set(0, 0, 0);
 
             if (isEnd) {
                 this.setVector(elementPoints, elementOffsetEnd, tA);
@@ -581,20 +617,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                 }
             }
 
-        /* for (i = 0; i < elementPointsCount - 1; i++) {
-                for (j = 0; j < radialSegmentCount; j++) {
-                    state.addTriangles(
-                        (verticesDone + i * radialSegmentCount + j),
-                        (verticesDone + (i + 1) * radialSegmentCount + (j + 1)),
-                        (verticesDone + i * radialSegmentCount + (j + 1) ),
-
-                        (verticesDone + i * radialSegmentCount + j),
-                        (verticesDone + (i + 1) * radialSegmentCount + j),
-                        (verticesDone + (i + 1) * radialSegmentCount + (j + 1)));
-                }
-            }
-        */
-
+        
         }
 
 

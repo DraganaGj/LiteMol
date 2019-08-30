@@ -71765,18 +71765,20 @@ var LiteMol;
                 (function (Geometry) {
                     var SchematicGeometryParams = /** @class */ (function () {
                         function SchematicGeometryParams() {
-                            this.radialSegmentCount = 1;
-                            this.heightSegmentCount = 1;
-                            this.turnWidth = 1;
-                            this.strandWidth = 0.5;
+                            this.radialSegmentCount = 10;
+                            //heightSegmentCount = 1;
+                            this.turnWidth = 0.1;
+                            this.strandWidth = 0.15;
                             this.nucleotideStrandLineWidth = 0.15;
                             this.nucleotideStrandFactor = 3;
-                            this.helixWidth = 2;
+                            this.helixWidth1 = 10;
+                            this.helixHeight1 = 0.1;
+                            this.helixWidth = 1.1;
                             this.helixHeight = 0.1;
-                            this.sheetWidth = 0.3;
+                            this.sheetWidth = 1.1;
                             this.sheetHeight = 0.1;
-                            this.arrowWidth = 2;
-                            this.tessalation = 5;
+                            this.arrowWidth = 1.7;
+                            this.tessalation = 8;
                         }
                         SchematicGeometryParams.Default = new SchematicGeometryParams();
                         return SchematicGeometryParams;
@@ -71898,17 +71900,14 @@ var LiteMol;
                             if (ctx.isTrace || unit.backboneOnly) {
                                 switch (unit.residueType[index]) {
                                     case 5 /* Strand */:
-                                        /* builder.addTube(unit, state, params.strandWidth, params.strandWidth /*,
-                                             builder.hasP(unit.residueIndex[index], ctx.strandArrays) ? params.nucleotideStrandFactor : 1*/ /*);
-                                    if (start || end) {
-                                        builder.addTubeCap(unit, state,  params.strandWidth, params.strandWidth, start, end);
-                                    }
-            
-                                    if (!ctx.strandTemplate) {
-                                        makeStrandLineTemplate(ctx);
-                                    }
-                                    builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
-                                    break; */
+                                        builder.addTube(unit, state, params.strandWidth, params.strandWidth, builder.hasP(unit.residueIndex[index], ctx.strandArrays) ? params.nucleotideStrandFactor : 1);
+                                        if (start || end) {
+                                            builder.addTubeCap(unit, state, params.strandWidth, params.strandWidth, start, end);
+                                        }
+                                        if (!ctx.strandTemplate) {
+                                            makeStrandLineTemplate(ctx);
+                                        }
+                                        builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
                                         builder.addSheet(unit, state, start, end);
                                         if (start || end) {
                                             builder.addSheetCap(unit, state, start, end);
@@ -71919,7 +71918,7 @@ var LiteMol;
                                         }
                                         break;
                                     default:
-                                        builder.addTube(unit, state, params.turnWidth, params.turnWidth /*, 1*/);
+                                        builder.addTube(unit, state, params.turnWidth, params.turnWidth, 1);
                                         if (start || end) {
                                             builder.addTubeCap(unit, state, params.turnWidth, params.turnWidth, start, end);
                                         }
@@ -71929,25 +71928,32 @@ var LiteMol;
                             else {
                                 switch (unit.residueType[index]) {
                                     case 1 /* Helix */:
+                                        builder.addCylinder(unit, state, start, end, params.helixWidth1, params.helixHeight1);
+                                        if (start) {
+                                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, true, false);
+                                        }
+                                        else if (end) {
+                                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, false, true);
+                                        }
+                                        break;
                                     /*builder.addTube(unit, state, params.helixWidth, params.helixHeight /*, 1);*/
                                     /*if (start) {
                                         builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, true, false);
                                     } else if (end) {
                                         builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, false, true);
                                     }
-                                    break;
-                                    case Core.Structure.SecondaryStructureType.Sheet:
-                                    builder.addSheet(unit, state, start, end);
-                                    if (start || end) {
-                                        builder.addSheetCap(unit, state, start, end);
-                                    }
                                     break; */
+                                    case 3 /* Sheet */:
+                                        builder.addSheet(unit, state, start, end);
+                                        if (start || end) {
+                                            builder.addSheetCap(unit, state, start, end);
+                                        }
+                                        break;
                                     case 5 /* Strand */:
-                                        /* builder.addTube(unit, state, params.strandWidth, params.strandWidth /*,
-                                             builder.hasP(unit.residueIndex[index], ctx.strandArrays)  ? params.nucleotideStrandFactor : 1*/ /*);
-                                    if (start || end) {
-                                        builder.addTubeCap(unit, state, params.strandWidth, params.strandWidth, start, end);
-                                    } */
+                                        builder.addTube(unit, state, params.strandWidth, params.strandWidth, builder.hasP(unit.residueIndex[index], ctx.strandArrays) ? params.nucleotideStrandFactor : 1);
+                                        if (start || end) {
+                                            builder.addTubeCap(unit, state, params.strandWidth, params.strandWidth, start, end);
+                                        }
                                         builder.addSheet(unit, state, start, end);
                                         if (start || end) {
                                             builder.addSheetCap(unit, state, start, end);
@@ -71958,7 +71964,7 @@ var LiteMol;
                                         }
                                         break;
                                     default:
-                                        builder.addTube(unit, state, params.turnWidth, params.turnWidth /*, 1*/);
+                                        builder.addTube(unit, state, params.turnWidth, params.turnWidth, 1);
                                         if (start || end) {
                                             builder.addTubeCap(unit, state, params.turnWidth, params.turnWidth, start, end);
                                         }
@@ -72101,61 +72107,54 @@ var LiteMol;
                             v.set(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
                             return v;
                         };
-                        BuilderSchematic.prototype.addTube = function (element, state, width, height /*, waveFactor: number*/) {
-                            var verticesDone = state.verticesDone, i = 0, j = 0, radialVector = this.tempVectors[0], normalVector = this.tempVectors[1], tempPos = this.tempVectors[2], a = this.tempVectors[3], b = this.tempVectors[4], u = this.tempVectors[5], v = this.tempVectors[6], horizontalVector = this.tempVectors[7], verticalVector = this.tempVectors[8], positionVector = this.tempVectors[9], normalOffset = this.tempVectors[10], torsionVector = this.tempVectors[11], elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementOffsetEnd = elementOffsetStart + element.linearSegmentCount, elementPoints = element.controlPoints, elementPointsCount = element.linearSegmentCount + 1, torsionVectors = element.torsionVectors, normalVectors = element.normalVectors, radialSegmentCount = state.params.radialSegmentCount;
+                        BuilderSchematic.prototype.addTube = function (element, state, width, height, waveFactor) {
+                            var verticesDone = state.verticesDone, i = 0, j = 0, radialVector = this.tempVectors[0], normalVector = this.tempVectors[1], tempPos = this.tempVectors[2], a = this.tempVectors[3], b = this.tempVectors[4], u = this.tempVectors[5], v = this.tempVectors[6], elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementOffsetEnd = elementOffsetStart + element.linearSegmentCount, elementPoints = element.controlPoints, elementPointsCount = element.linearSegmentCount + 1, torsionVectors = element.torsionVectors, normalVectors = element.normalVectors, radialSegmentCount = state.params.radialSegmentCount;
                             var di = 1 / (elementOffsetEnd - elementOffsetStart);
                             for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
                                 this.setVector(torsionVectors, i, u);
                                 this.setVector(normalVectors, i, v);
-                                var tt = di * (i - elementOffsetStart);
-                                var ff = (Math.cos(2 * Math.PI * tt));
-                                /* const tt = di * (i - elementOffsetStart) - 0.5;
-                                  
-                                  const ff = 1 + (waveFactor - 1) * (Math.cos(2 * Math.PI * tt) + 1);
-                                  //const ff =(Math.cos(2 * Math.PI * tt));
-                                  
-                                  
-                  
-                                 
-                                 /* for (j = 0; j < radialSegmentCount; j++) {
-                                      let t = 2 * Math.PI * j / radialSegmentCount;
-                                      //let t = 2 * Math.PI * j / radialSegmentCount;
-                                      const x = r * Math.cos(t);
-                                      const y = r * Math.sin (t)
-                                      a.copy(u);
-                                      b.copy(v);
-                                      radialVector.addVectors(a.multiplyScalar(x * Math.cos(t)), b.multiplyScalar(y * Math.sin(t)));
-                                      radialVector.addVectors(a.multiplyScalar(x* Math.cos(t)), b.multiplyScalar(y * Math.sin(t)));
-                                      a.copy(u);
-                                      b.copy(v);
-                                      normalVector.addVectors(a.multiplyScalar(y *Math.cos(t)), b.multiplyScalar(x* Math.sin(t)));
-                                      normalVector.normalize();
-                  
-                                      this.setVector(elementPoints, i, tempPos);
-                                      tempPos.add(radialVector);
-                                  */
-                                var params = state.params;
-                                var w = params.helixWidth, h = /*ff * */ params.helixHeight;
-                                var r = width / 2;
-                                var volume = Math.PI * Math.pow(r, 2) * height;
+                                var tt = di * (i - elementOffsetStart) - 0.5;
+                                var ff = 1 + (waveFactor - 1) * (Math.cos(2 * Math.PI * tt) + 1);
+                                var w = ff * width, h = ff * height;
                                 for (j = 0; j < radialSegmentCount; j++) {
-                                    //let t = 2 * Math.PI;
                                     var t = 2 * Math.PI * j / radialSegmentCount;
                                     a.copy(u);
                                     b.copy(v);
-                                    radialVector.addVectors(a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t)));
+                                    radialVector.addVectors(a.multiplyScalar(w * Math.cos(t)), b.multiplyScalar(h * Math.sin(t)));
                                     a.copy(u);
                                     b.copy(v);
-                                    normalVector.addVectors(a.multiplyScalar(r * Math.cos(t)), b.multiplyScalar(r * Math.sin(t)));
+                                    normalVector.addVectors(a.multiplyScalar(h * Math.cos(t)), b.multiplyScalar(w * Math.sin(t)));
                                     normalVector.normalize();
                                     this.setVector(elementPoints, i, tempPos);
-                                    tempPos.add(normalVector);
+                                    tempPos.add(radialVector);
                                     state.addVertex(tempPos, normalVector);
                                 }
                             }
                             for (i = 0; i < elementPointsCount - 1; i++) {
                                 for (j = 0; j < radialSegmentCount; j++) {
-                                    state.addTriangles((verticesDone + i * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + (j + 1)), (verticesDone + i * radialSegmentCount + (j + 1)), (verticesDone + i * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + (j + 1)));
+                                    state.addTriangles((verticesDone + i * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount), (verticesDone + i * radialSegmentCount + (j + 1) % radialSegmentCount), (verticesDone + i * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount));
+                                }
+                            }
+                        };
+                        BuilderSchematic.prototype.addCylinder = function (element, state, isStart, isEnd, width, height) {
+                            var verticesDone = state.verticesDone, i = 0, j = 0, horizontalVector = this.tempVectors[0], normalVector = this.tempVectors[1], a = this.tempVectors[2], b = this.tempVectors[3], u = this.tempVectors[4], v = this.tempVectors[5], radialVector = this.tempVectors[6], tempPos = this.tempVectors[7], tempPos1 = this.tempVectors[8], tempPos2 = this.tempVectors[8], verticalVector = this.tempVectors[9], elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementPoints = element.controlPoints, elementPointsCount = element.linearSegmentCount + 1, normalVectors = element.normalVectors, elementOffsetEnd = elementOffsetStart + element.linearSegmentCount, torsionVectors = element.torsionVectors, radialSegmentCount = state.params.radialSegmentCount;
+                            for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
+                                this.setVector(torsionVectors, i, horizontalVector);
+                                horizontalVector.multiplyScalar(width);
+                                this.setVector(normalVectors, i, verticalVector);
+                                verticalVector.multiplyScalar(height);
+                                var t = 2 * Math.PI * i / radialSegmentCount;
+                                var r = width / 2;
+                                a.copy(u);
+                                b.copy(v);
+                                radialVector.addVectors(a.multiplyScalar(Math.cos(t) * width), b.multiplyScalar(Math.sin(t) * width));
+                                this.setVector(elementPoints, i, tempPos);
+                                radialVector.add(tempPos);
+                                //tempPos.add (radialVector);
+                            }
+                            for (i = 0; i < elementPointsCount - 1; i++) {
+                                for (j = 0; j < radialSegmentCount; j++) {
+                                    state.addTriangles((verticesDone + i * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount), (verticesDone + i * radialSegmentCount + (j + 1) % radialSegmentCount), (verticesDone + i * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + j), (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount));
                                 }
                             }
                         };
@@ -72190,10 +72189,7 @@ var LiteMol;
                             }
                         };
                         BuilderSchematic.prototype.addSheet = function (element, state, isStart, isEnd) {
-                            var verticesDone = state.verticesDone, params = state.params, i = 0, j = 0, horizontalVector = this.tempVectors[0], verticalVector = this.tempVectors[1], positionVector = this.tempVectors[2], normalOffset = this.tempVectors[3], normalVector = this.tempVectors[4], temp = this.tempVectors[5], tA = this.tempVectors[7], tB = this.tempVectors[8], torsionVector = this.tempVectors[9], elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementOffsetEnd = elementOffsetStart + element.linearSegmentCount, elementPoints = element.controlPoints, torsionVectors = element.torsionVectors, normalVectors = element.normalVectors, 
-                            /*elementPointsCount = element.linearSegmentCount + 1,
-                            radialSegmentCount = state.params.radialSegmentCount,*/
-                            offsetLength = 0, actualWidth = 0;
+                            var verticesDone = state.verticesDone, params = state.params, i = 0, j = 0, horizontalVector = this.tempVectors[0], verticalVector = this.tempVectors[1], positionVector = this.tempVectors[2], normalOffset = this.tempVectors[3], normalVector = this.tempVectors[4], temp = this.tempVectors[5], tA = this.tempVectors[7], tB = this.tempVectors[8], torsionVector = this.tempVectors[9], elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementOffsetEnd = elementOffsetStart + element.linearSegmentCount, elementPoints = element.controlPoints, torsionVectors = element.torsionVectors, normalVectors = element.normalVectors, offsetLength = 0, actualWidth = 0;
                             normalOffset.set(0, 0, 0);
                             if (isEnd) {
                                 this.setVector(elementPoints, elementOffsetEnd, tA);
@@ -72240,19 +72236,6 @@ var LiteMol;
                                     state.addTriangles(verticesDone + i * 8 + 2 * j, verticesDone + (i + 1) * 8 + 2 * j + 1, verticesDone + i * 8 + 2 * j + 1, verticesDone + i * 8 + 2 * j, verticesDone + (i + 1) * 8 + 2 * j, verticesDone + (i + 1) * 8 + 2 * j + 1);
                                 }
                             }
-                            /* for (i = 0; i < elementPointsCount - 1; i++) {
-                                    for (j = 0; j < radialSegmentCount; j++) {
-                                        state.addTriangles(
-                                            (verticesDone + i * radialSegmentCount + j),
-                                            (verticesDone + (i + 1) * radialSegmentCount + (j + 1)),
-                                            (verticesDone + i * radialSegmentCount + (j + 1) ),
-                    
-                                            (verticesDone + i * radialSegmentCount + j),
-                                            (verticesDone + (i + 1) * radialSegmentCount + j),
-                                            (verticesDone + (i + 1) * radialSegmentCount + (j + 1)));
-                                    }
-                                }
-                            */
                         };
                         BuilderSchematic.prototype.addSheetCap = function (element, state, isStart, isEnd) {
                             var params = state.params, elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementPoint = this.setVector(element.controlPoints, elementOffsetStart, this.tempVectors[0]);
@@ -76134,6 +76117,103 @@ var LiteMol;
                     };
                 }
                 Molecule.createCachedColorMapThemeProvider = createCachedColorMapThemeProvider;
+                //new color scheme
+                var SecondaryStructure = /** @class */ (function () {
+                    function SecondaryStructure(model, _a) {
+                        var r = _a.r, g = _a.g, b = _a.b;
+                        this.residueIndex = model.data.atoms.residueIndex;
+                        this.r = r;
+                        this.g = g;
+                        this.b = b;
+                    }
+                    SecondaryStructure.prototype.getProperty = function (index) { return this.residueIndex[index]; };
+                    SecondaryStructure.prototype.setColor = function (i, color) {
+                        color.r = this.r[i];
+                        color.g = this.g[i];
+                        color.b = this.b[i];
+                    };
+                    return SecondaryStructure;
+                }());
+                Molecule.SecondaryStructurePalette = [
+                    Vis.Color.fromHex(0xB77CE3),
+                    /*Vis.Color.fromHex(0x892AD2),
+                    Vis.Color.fromHex(0x0000CC),
+                    Vis.Color.fromHex(0x00AACC),
+                    Vis.Color.fromHex(0x00CC00),
+                    Vis.Color.fromHex(0xCCAA00),
+                    Vis.Color.fromHex(0xCC7700),*/
+                    Vis.Color.fromHex(0xCC2200)
+                ];
+                var SecondaryStructureBaseColors = Bootstrap.Immutable.Map({
+                    'Bond': Vis.Molecule.Colors.DefaultBondColor,
+                    'Highlight': Vis.Color.fromHex(0xFFFFFF),
+                    'Selection': Vis.Color.fromHex(0x968000),
+                });
+                function makeSecondaryStructure(model, groupsSource, groupId) {
+                    var rC = model.data.residues.count;
+                    var _a = { r: new Float32Array(rC), g: new Float32Array(rC), b: new Float32Array(rC) }, r = _a.r, g = _a.g, b = _a.b;
+                    var groups = groupsSource(model);
+                    var count = groups.count, residueStartIndex = groups.residueStartIndex, residueEndIndex = groups.residueEndIndex;
+                    var cC = Molecule.SecondaryStructurePalette.length - 1;
+                    var color = Vis.Color.fromHex(0);
+                    var strips = LiteMol.Core.Utils.FastMap.create();
+                    function Unit(unit, ctx) {
+                        var state = ctx.state, params = ctx.params;
+                        var builder = ctx.builder;
+                        for (var cI = 0; cI < count; cI++) {
+                            var id = groupId(groups, cI);
+                            var l = residueEndIndex[cI] - residueStartIndex[cI];
+                            if (strips.has(id)) {
+                                strips.get(id).count += l;
+                            }
+                            else {
+                                strips.set(id, { index: 0, count: l });
+                            }
+                            strips.forEach(function (s) { return s.count = Math.max(s.count - 1, 1); });
+                            var strip = strips.get(groupId(groups, cI));
+                            var max = strip.count;
+                            var t = cC * strip.index / max;
+                            var low = Math.floor(t), high = Math.ceil(t);
+                            for (var index = 0, _max = unit.residueCount; index < _max; index++) {
+                                state.vertexMap.startElement(unit.residueIndex[index]);
+                                var numVertices = state.verticesDone;
+                                state.residueIndex = index;
+                                var start = unit.structureStarts.has(unit.residueIndex[index]);
+                                var end = unit.structureEnds.has(unit.residueIndex[index]);
+                                if (ctx.isTrace || unit.backboneOnly) {
+                                    switch (unit.residueType[index]) {
+                                        case 1 /* Helix */:
+                                            Vis.Color.interpolate(Molecule.SecondaryStructurePalette[low], Molecule.SecondaryStructurePalette[high], t - low, color);
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    for (var cI = 0; cI < count; cI++) {
+                        var s = residueStartIndex[cI], l = residueEndIndex[cI] - s;
+                        var strip = strips.get(groupId(groups, cI));
+                        var max = strip.count;
+                        for (var i = 0; i < l; i++) {
+                            var t = cC * strip.index / max;
+                            var low = Math.floor(t), high = Math.ceil(t);
+                            Vis.Color.interpolate(Molecule.SecondaryStructurePalette[low], Molecule.SecondaryStructurePalette[high], t - low, color);
+                            r[s + i] = color.r;
+                            g[s + i] = color.g;
+                            b[s + i] = color.b;
+                            strip.index++;
+                        }
+                    }
+                    return { r: r, g: g, b: b };
+                }
+                function createSecondaryStructureProvider(groups, groupId) {
+                    return function (e, props) {
+                        var model = Bootstrap.Utils.Molecule.findModel(e).props.model;
+                        var colors = makeSecondaryStructure(model, groups, groupId);
+                        var mapping = new SecondaryStructure(model, colors);
+                        return Vis.Theme.createMapping(mapping, props);
+                    };
+                }
                 var RainbowMapping = /** @class */ (function () {
                     function RainbowMapping(model, _a) {
                         var r = _a.r, g = _a.g, b = _a.b;
@@ -76216,7 +76296,15 @@ var LiteMol;
                             description: 'Color the surface by Chain ID.',
                             colors: Molecule.ModelVisualBaseColors,
                             provider: createCachedPaletteThemeProvider('chain-id', function (m) { return ({ index: m.data.atoms.residueIndex, property: m.data.residues.asymId }); }, Vis.Molecule.Colors.DefaultPallete)
-                        }, {
+                        },
+                        //added new color scheme
+                        {
+                            name: 'Secondary Structure',
+                            description: 'Color the surface by secondary structure',
+                            colors: SecondaryStructureBaseColors,
+                            provider: createSecondaryStructureProvider(function (m) { return m.data.chains; }, function (t, i) { return t.asymId[i] + " " + t.entityId[i]; })
+                        },
+                        {
                             name: 'Entity ID',
                             description: 'Color the surface by Entity ID.',
                             colors: Molecule.ModelVisualBaseColors,
@@ -76253,6 +76341,7 @@ var LiteMol;
                             provider: uniformThemeProvider
                         }
                     ];
+                    Default.SecondaryStructureTemplate = Default.Themes.filter(function (t) { return t.name === 'Secondary Structure'; })[0];
                     Default.CartoonThemeTemplate = Default.Themes.filter(function (t) { return t.name === 'Chain ID'; })[0];
                     Default.ElementSymbolThemeTemplate = Default.Themes.filter(function (t) { return t.name === 'Element Symbol'; })[0];
                     Default.SurfaceThemeTemplate = Default.Themes.filter(function (t) { return t.name === 'Uniform Color'; })[0];

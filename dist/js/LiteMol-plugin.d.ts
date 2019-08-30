@@ -12304,11 +12304,12 @@ declare namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
 declare namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
     class SchematicGeometryParams {
         radialSegmentCount: number;
-        heightSegmentCount: number;
         turnWidth: number;
         strandWidth: number;
         nucleotideStrandLineWidth: number;
         nucleotideStrandFactor: number;
+        helixWidth1: number;
+        helixHeight1: number;
         helixWidth: number;
         helixHeight: number;
         sheetWidth: number;
@@ -12348,7 +12349,8 @@ declare namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
         constructor();
         private tempVectors;
         private setVector;
-        addTube(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number): void;
+        addTube(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number, waveFactor: number): void;
+        addCylinder(element: CartoonAsymUnit, state: SchematicGeometryState, isStart: boolean, isEnd: boolean, width: number, height: number): void;
         addTubeCap(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number, isStart: boolean, isEnd: boolean): void;
         addSheet(element: CartoonAsymUnit, state: SchematicGeometryState, isStart: boolean, isEnd: boolean): void;
         addSheetCap(element: CartoonAsymUnit, state: SchematicGeometryState, isStart: boolean, isEnd: boolean): void;
@@ -13219,9 +13221,11 @@ declare namespace LiteMol.Bootstrap.Visualization.Molecule {
         index: number[];
         property: any[];
     }, colorMap: LiteMol.Visualization.Theme.ColorMap, fallbackColor: LiteMol.Visualization.Color): (e: Entity.Any, props?: Vis.Theme.Props | undefined) => Vis.Theme;
+    const SecondaryStructurePalette: Vis.Color[];
     const RainbowPalette: Vis.Color[];
     namespace Default {
         const Themes: Theme.Template[];
+        const SecondaryStructureTemplate: Theme.Template;
         const CartoonThemeTemplate: Theme.Template;
         const ElementSymbolThemeTemplate: Theme.Template;
         const SurfaceThemeTemplate: Theme.Template;

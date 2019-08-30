@@ -81,12 +81,12 @@ var ExampleNames = [
     'Channels',
     'PrimitivesAndLabels',
     'AngularExample',
-    'Schematic'
+    
 ];
 
 var ViewerAndExamplesTasks = [];
 
-gulp.task ('Start-Schematic', [], function() {return compilets ({project: `./src/lib/tsconfig.json`, out: `.src/lib/Visualization/Molecule/Schematic`});});
+
 gulp.task('Start-ExamplesAndViewer', [], function() { console.log('Building Viewer and Examples'); });
 gulp.task('Start-ExamplesAndViewer-inline', ['Plugin'], function() { console.log('Building Viewer and Examples'); });
 gulp.task('Viewer', ['Start-ExamplesAndViewer'], function() { return compilets({ project: `./src/Viewer/tsconfig.json`, out: `./build/Viewer/LiteMol-viewer.js` }); });
