@@ -76042,6 +76042,7 @@ var LiteMol;
                     'Bond': Vis.Molecule.Colors.DefaultBondColor,
                     'Highlight': Vis.Theme.Default.HighlightColor,
                     'Selection': Vis.Theme.Default.SelectionColor,
+                    'SecondaryStructure': Vis.Theme.Default.SelectionColor,
                 });
                 function mappingClosure(index, property) {
                     return function (i) { return property[index[i]]; };
@@ -76117,100 +76118,123 @@ var LiteMol;
                     };
                 }
                 Molecule.createCachedColorMapThemeProvider = createCachedColorMapThemeProvider;
-                //new color scheme
-                var SecondaryStructure = /** @class */ (function () {
-                    function SecondaryStructure(model, _a) {
+                var SecondaryStructureMapping = /** @class */ (function () {
+                    function SecondaryStructureMapping(model, _a) {
                         var r = _a.r, g = _a.g, b = _a.b;
                         this.residueIndex = model.data.atoms.residueIndex;
                         this.r = r;
                         this.g = g;
                         this.b = b;
                     }
-                    SecondaryStructure.prototype.getProperty = function (index) { return this.residueIndex[index]; };
-                    SecondaryStructure.prototype.setColor = function (i, color) {
+                    SecondaryStructureMapping.prototype.getProperty = function (index) { return this.residueIndex[index]; };
+                    SecondaryStructureMapping.prototype.setColor = function (i, color) {
                         color.r = this.r[i];
                         color.g = this.g[i];
                         color.b = this.b[i];
                     };
-                    return SecondaryStructure;
+                    return SecondaryStructureMapping;
                 }());
                 Molecule.SecondaryStructurePalette = [
                     Vis.Color.fromHex(0xB77CE3),
-                    /*Vis.Color.fromHex(0x892AD2),
+                    Vis.Color.fromHex(0x892AD2),
                     Vis.Color.fromHex(0x0000CC),
                     Vis.Color.fromHex(0x00AACC),
                     Vis.Color.fromHex(0x00CC00),
                     Vis.Color.fromHex(0xCCAA00),
-                    Vis.Color.fromHex(0xCC7700),*/
+                    Vis.Color.fromHex(0xCC7700),
                     Vis.Color.fromHex(0xCC2200)
                 ];
-                var SecondaryStructureBaseColors = Bootstrap.Immutable.Map({
+                /*const SecondaryStructureBaseColors = Immutable.Map({
                     'Bond': Vis.Molecule.Colors.DefaultBondColor,
                     'Highlight': Vis.Color.fromHex(0xFFFFFF),
                     'Selection': Vis.Color.fromHex(0x968000),
-                });
+                });  */
                 function makeSecondaryStructure(model, groupsSource, groupId) {
                     var rC = model.data.residues.count;
                     var _a = { r: new Float32Array(rC), g: new Float32Array(rC), b: new Float32Array(rC) }, r = _a.r, g = _a.g, b = _a.b;
                     var groups = groupsSource(model);
                     var count = groups.count, residueStartIndex = groups.residueStartIndex, residueEndIndex = groups.residueEndIndex;
-                    var cC = Molecule.SecondaryStructurePalette.length - 1;
+                    var cC = Molecule.RainbowPalette.length - 1;
                     var color = Vis.Color.fromHex(0);
                     var strips = LiteMol.Core.Utils.FastMap.create();
-                    function Unit(unit, ctx) {
-                        var state = ctx.state, params = ctx.params;
-                        var builder = ctx.builder;
-                        for (var cI = 0; cI < count; cI++) {
-                            var id = groupId(groups, cI);
-                            var l = residueEndIndex[cI] - residueStartIndex[cI];
-                            if (strips.has(id)) {
-                                strips.get(id).count += l;
-                            }
-                            else {
-                                strips.set(id, { index: 0, count: l });
-                            }
-                            strips.forEach(function (s) { return s.count = Math.max(s.count - 1, 1); });
-                            var strip = strips.get(groupId(groups, cI));
-                            var max = strip.count;
-                            var t = cC * strip.index / max;
-                            var low = Math.floor(t), high = Math.ceil(t);
-                            for (var index = 0, _max = unit.residueCount; index < _max; index++) {
-                                state.vertexMap.startElement(unit.residueIndex[index]);
-                                var numVertices = state.verticesDone;
-                                state.residueIndex = index;
-                                var start = unit.structureStarts.has(unit.residueIndex[index]);
-                                var end = unit.structureEnds.has(unit.residueIndex[index]);
-                                if (ctx.isTrace || unit.backboneOnly) {
-                                    switch (unit.residueType[index]) {
-                                        case 1 /* Helix */:
-                                            Vis.Color.interpolate(Molecule.SecondaryStructurePalette[low], Molecule.SecondaryStructurePalette[high], t - low, color);
-                                            break;
-                                    }
-                                }
-                            }
+                    for (var i = 0; i < count; i++) {
+                        /*const s = residueStartIndex[i], l = residueEndIndex[i] - s;
+                        
+                        const id = groupId(groups, i);
+                       
+                        if (strips.has(id)) {
+                            strips.get(id)!.count += l;
+                        } else {
+                            strips.set(id, { index: 0, count: l });
+                        }*/
+                        var strip = strips.get(groupId(groups, i));
+                        var residueType = [];
+                        switch (residueType[i]) {
+                            case 5 /* Strand */:
+                                r[count + i] = color.r;
+                                g[count + i] = color.g;
+                                b[count + i] = color.b;
+                                Vis.Color.fromHex(0x00AACC);
+                                break;
+                            case 1 /* Helix */:
+                                r[count + i] = color.r;
+                                g[count + i] = color.g;
+                                b[count + i] = color.b;
+                                Vis.Color.fromHex(0xCC2200);
+                                break;
+                            case 3 /* Sheet */:
+                                r[count + i] = color.r;
+                                g[count + i] = color.g;
+                                b[count + i] = color.b;
+                                Vis.Color.fromHex(0xB77CE3);
+                                break;
                         }
-                    }
-                    for (var cI = 0; cI < count; cI++) {
-                        var s = residueStartIndex[cI], l = residueEndIndex[cI] - s;
-                        var strip = strips.get(groupId(groups, cI));
-                        var max = strip.count;
-                        for (var i = 0; i < l; i++) {
-                            var t = cC * strip.index / max;
-                            var low = Math.floor(t), high = Math.ceil(t);
-                            Vis.Color.interpolate(Molecule.SecondaryStructurePalette[low], Molecule.SecondaryStructurePalette[high], t - low, color);
-                            r[s + i] = color.r;
-                            g[s + i] = color.g;
-                            b[s + i] = color.b;
-                            strip.index++;
-                        }
+                        /*r[s + i] = color.r;
+                        g[s + i] = color.g;
+                        b[s + i] = color.b;
+                        
+                        strip.index++;*/
                     }
                     return { r: r, g: g, b: b };
                 }
+                /* const strips = Core.Utils.FastMap.create<string, { count: number, index: number }>();
+         
+                 for (let cI = 0; cI < count; cI++) {
+                     const id = groupId(groups, cI);
+                     const l = residueEndIndex[cI] - residueStartIndex[cI];
+                     if (strips.has(id)) {
+                         strips.get(id)!.count += l;
+                     } else {
+                         strips.set(id, { index: 0, count: l });
+                     }
+                 }
+         
+                 strips.forEach(s => s.count = Math.max(s.count - 1, 1));
+         
+                 for (let cI = 0; cI < count; cI++) {
+                     const s = residueStartIndex[cI], l = residueEndIndex[cI] - s;
+                     const strip = strips.get(groupId(groups, cI))!;
+                     const max = strip.count;
+         
+                     for (let i = 0; i < l; i++) {
+                        /* const t = cC * strip.index / max;
+                         const low = Math.floor(t), high = Math.ceil(t);
+                         Vis.Color.interpolate(SecondaryStructurePalette[low], RainbowPalette[high], t - low, color);
+                         r[s + i] = color.r;
+                         g[s + i] = color.g;
+                         b[s + i] = color.b;
+                         strip.index++;
+                     }
+                 }
+                 
+                 
+                 return { r, g, b };
+             }*/
                 function createSecondaryStructureProvider(groups, groupId) {
                     return function (e, props) {
                         var model = Bootstrap.Utils.Molecule.findModel(e).props.model;
                         var colors = makeSecondaryStructure(model, groups, groupId);
-                        var mapping = new SecondaryStructure(model, colors);
+                        var mapping = new SecondaryStructureMapping(model, colors);
                         return Vis.Theme.createMapping(mapping, props);
                     };
                 }
@@ -76301,7 +76325,7 @@ var LiteMol;
                         {
                             name: 'Secondary Structure',
                             description: 'Color the surface by secondary structure',
-                            colors: SecondaryStructureBaseColors,
+                            colors: RainbowBaseColors,
                             provider: createSecondaryStructureProvider(function (m) { return m.data.chains; }, function (t, i) { return t.asymId[i] + " " + t.entityId[i]; })
                         },
                         {

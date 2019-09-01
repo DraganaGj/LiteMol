@@ -16,6 +16,7 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
         'Bond': Vis.Molecule.Colors.DefaultBondColor,
         'Highlight': Vis.Theme.Default.HighlightColor,
         'Selection': Vis.Theme.Default.SelectionColor,
+        'SecondaryStructure' : Vis.Theme.Default.SelectionColor,
     });     
     
     function mappingClosure(index: number[], property: any[]) {
@@ -97,8 +98,10 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
             return Vis.Theme.createMapping(mapping, props);   
         }
     }
-    //new color scheme
-    class SecondaryStructure implements Vis.Theme.ElementMapping {
+
+    
+
+    class SecondaryStructureMapping implements Vis.Theme.ElementMapping {
         private residueIndex: number[];
         private r: Float32Array;
         private g: Float32Array;
@@ -124,82 +127,113 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
 
     export const SecondaryStructurePalette = [
         Vis.Color.fromHex(0xB77CE3),
-        /*Vis.Color.fromHex(0x892AD2),
+        Vis.Color.fromHex(0x892AD2),
         Vis.Color.fromHex(0x0000CC),
         Vis.Color.fromHex(0x00AACC),
         Vis.Color.fromHex(0x00CC00),
         Vis.Color.fromHex(0xCCAA00),
-        Vis.Color.fromHex(0xCC7700),*/
+        Vis.Color.fromHex(0xCC7700),
         Vis.Color.fromHex(0xCC2200)
     ]
 
-    const SecondaryStructureBaseColors = Immutable.Map({ 
+    /*const SecondaryStructureBaseColors = Immutable.Map({ 
         'Bond': Vis.Molecule.Colors.DefaultBondColor,
         'Highlight': Vis.Color.fromHex(0xFFFFFF),
         'Selection': Vis.Color.fromHex(0x968000),
-    });  
+    });  */
 
     function makeSecondaryStructure(
         model: Core.Structure.Molecule.Model, 
         groupsSource: (m: Core.Structure.Molecule.Model) => Core.Structure.ChainTable | Core.Structure.EntityTable,
-        groupId: (t: Core.Structure.ChainTable | Core.Structure.EntityTable, i: number) => string) {
-            
-        const rC = model.data.residues.count;
-        const { r, g, b } = { r: new Float32Array(rC), g: new Float32Array(rC), b: new Float32Array(rC) };
+        groupId: (t: Core.Structure.ChainTable | Core.Structure.EntityTable, i: number) => string)
+         {
+          
+          const rC = model.data.residues.count; 
+          const { r, g, b } = { r: new Float32Array(rC), g: new Float32Array(rC), b: new Float32Array(rC) };
         const groups = groupsSource(model);
         const { count, residueStartIndex, residueEndIndex } = groups;
-        const cC = SecondaryStructurePalette.length - 1;
+        const cC = RainbowPalette.length - 1;
         const color = Vis.Color.fromHex(0);
         const strips = Core.Utils.FastMap.create<string, { count: number, index: number }>();
-       
-        function Unit(unit: LiteMol.Visualization.Molecule.Schematic.Geometry.CartoonAsymUnit, ctx: LiteMol.Visualization.Molecule.Schematic.Geometry.ContextSchematic) {
-            let state = ctx.state, params = ctx.params;
-            let builder = ctx.builder;
-            for (let cI = 0; cI < count; cI++) {
-                /*const id = groupId(groups, cI);
-                const l = residueEndIndex[cI] - residueStartIndex[cI];
-                if (strips.has(id)) {
-                    strips.get(id)!.count += l;
-                } else {
-                    strips.set(id, { index: 0, count: l });
-                }*/
+        for (let i = 0; i <count; i++) {
+            /*const s = residueStartIndex[i], l = residueEndIndex[i] - s;
             
-    
-            strips.forEach(s => s.count = Math.max(s.count - 1, 1));
-            const strip = strips.get(groupId(groups, cI))!;
-            const max = strip.count;
-            const t = cC * strip.index / max;
-            const low = Math.floor(t), high = Math.ceil(t);
-        for (let index = 0, _max = unit.residueCount; index < _max; index++) {
-            state.vertexMap.startElement(unit.residueIndex[index]);
-            let numVertices = state.verticesDone;
-            state.residueIndex = index;
-            let start = unit.structureStarts.has(unit.residueIndex[index]);
-            let end = unit.structureEnds.has(unit.residueIndex[index]);
-            if (ctx.isTrace || unit.backboneOnly) {
-                switch (unit.residueType[index]) {
-                    case Core.Structure.SecondaryStructureType.Helix:
-                            Vis.Color.interpolate(SecondaryStructurePalette[low], SecondaryStructurePalette[high], t - low, color);
+            const id = groupId(groups, i);
+           
+            if (strips.has(id)) {
+                strips.get(id)!.count += l;
+            } else {
+                strips.set(id, { index: 0, count: l });
+            }*/
+                               
+            const strip = strips.get(groupId(groups, i))!;
+           let residueType: Core.Structure.SecondaryStructureType[] = [];
+            switch (residueType[i]) {
+                case Core.Structure.SecondaryStructureType.Strand:
+                        r[count + i] = color.r;
+                        g[count + i] = color.g;
+                        b[count + i] = color.b;
+                        Vis.Color.fromHex(0x00AACC);
+                        
+                        break;
+                        case Core.Structure.SecondaryStructureType.Helix:
+                                r[count + i] = color.r;
+                                g[count + i] = color.g;
+                                b[count + i] = color.b;   
+                            Vis.Color.fromHex(0xCC2200);
                             break;
-                }}}}}
+                            case Core.Structure.SecondaryStructureType.Sheet:
+                                    r[count + i] = color.r;
+                                    g[count + i] = color.g;
+                                    b[count + i] = color.b;
+                                Vis.Color.fromHex(0xB77CE3);
+                                break;
+            }
+                                /*r[s + i] = color.r;
+                                g[s + i] = color.g;
+                                b[s + i] = color.b;
+                                
+                                strip.index++;*/
+            
+          }
         
+          return { r, g, b };
+        }
+        
+
+       /* const strips = Core.Utils.FastMap.create<string, { count: number, index: number }>();
+
+        for (let cI = 0; cI < count; cI++) {
+            const id = groupId(groups, cI);
+            const l = residueEndIndex[cI] - residueStartIndex[cI];
+            if (strips.has(id)) {
+                strips.get(id)!.count += l;
+            } else {
+                strips.set(id, { index: 0, count: l });
+            }
+        }
+
+        strips.forEach(s => s.count = Math.max(s.count - 1, 1));
+
         for (let cI = 0; cI < count; cI++) {
             const s = residueStartIndex[cI], l = residueEndIndex[cI] - s;
             const strip = strips.get(groupId(groups, cI))!;
             const max = strip.count;
 
             for (let i = 0; i < l; i++) {                
-                const t = cC * strip.index / max;
+               /* const t = cC * strip.index / max;
                 const low = Math.floor(t), high = Math.ceil(t);
-                Vis.Color.interpolate(SecondaryStructurePalette[low], SecondaryStructurePalette[high], t - low, color);
+                Vis.Color.interpolate(SecondaryStructurePalette[low], RainbowPalette[high], t - low, color);
                 r[s + i] = color.r;
                 g[s + i] = color.g;
                 b[s + i] = color.b;
                 strip.index++;
             }
         }
+        
+        
         return { r, g, b };
-        }
+    }*/
 
     function createSecondaryStructureProvider(
         groups: (m: Core.Structure.Molecule.Model) => Core.Structure.ChainTable | Core.Structure.EntityTable, 
@@ -207,13 +241,10 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
         return function (e: Entity.Any, props?: LiteMol.Visualization.Theme.Props) {     
             const model = Utils.Molecule.findModel(e)!.props.model;
             const colors = makeSecondaryStructure(model, groups, groupId);
-            const mapping = new SecondaryStructure(model, colors);
+            const mapping = new SecondaryStructureMapping(model, colors);
             return Vis.Theme.createMapping(mapping, props);   
         }
     }
-
-
-
 
     class RainbowMapping implements Vis.Theme.ElementMapping {
         private residueIndex: number[];
@@ -324,7 +355,7 @@ namespace LiteMol.Bootstrap.Visualization.Molecule {
             {
                 name: 'Secondary Structure',
                 description: 'Color the surface by secondary structure',
-                colors: SecondaryStructureBaseColors,
+                colors: RainbowBaseColors,
                 provider: createSecondaryStructureProvider(m => m.data.chains, (t, i) => `${(t as Core.Structure.ChainTable).asymId[i]} ${(t as Core.Structure.ChainTable).entityId[i]}` )
 
             },
