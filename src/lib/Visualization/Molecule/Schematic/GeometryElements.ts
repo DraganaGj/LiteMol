@@ -10,10 +10,10 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
         turnWidth = 0.1;
 
         strandWidth = 0.15;
-        
+
         nucleotideStrandLineWidth = 0.15;
         nucleotideStrandFactor = 3;
-        
+
         helixWidth1 = 10;
         helixHeight1 = 0.1;
         helixWidth = 1.1;
@@ -111,11 +111,13 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
             geometry: templ
         };
     }
-    
+
+    var cylCount = 0;
     export function buildUnit(unit: CartoonAsymUnit, ctx: ContextSchematic) {
         let state = ctx.state, params = ctx.params;
         let builder = ctx.builder;
 
+        //for (let index = 0, _max = unit.residueCount; index < _max; index++) {
         for (let index = 0, _max = unit.residueCount; index < _max; index++) {
             state.vertexMap.startElement(unit.residueIndex[index]);
             let numVertices = state.verticesDone;
@@ -125,74 +127,27 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
             if (ctx.isTrace || unit.backboneOnly) {
                 switch (unit.residueType[index]) {
                     case Core.Structure.SecondaryStructureType.Strand:
-                       builder.addTube(unit, state, params.strandWidth, params.strandWidth, 
+                        builder.addTube(unit, state, params.strandWidth, params.strandWidth,
                             builder.hasP(unit.residueIndex[index], ctx.strandArrays) ? params.nucleotideStrandFactor : 1);
                         if (start || end) {
-                            builder.addTubeCap(unit, state,  params.strandWidth, params.strandWidth, start, end);
-                        }
-
-                        if (!ctx.strandTemplate) {
-                            makeStrandLineTemplate(ctx);
-                        }
-                        builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
-                         
-
-                        builder.addSheet(unit, state, start, end);
-                        if (start || end) {
-                            builder.addSheetCap(unit, state, start, end);
-
-                        if (!ctx.strandTemplate) {
-                            makeStrandLineTemplate(ctx);
-                        }
-                        builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
-                    }
-                        break;
-
-                    default:
-                        builder.addTube(unit, state, params.turnWidth, params.turnWidth , 1);
-                        if (start || end) {
-                            builder.addTubeCap(unit, state, params.turnWidth, params.turnWidth, start, end);
-                        }
-                        break; 
-                }
-            } else {
-                switch (unit.residueType[index]) {
-                    case Core.Structure.SecondaryStructureType.Helix:
-                        builder.addCylinder(unit, state, start, end, params.helixWidth1, params.helixHeight1);
-                        if (start) {
-                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, true, false);
-                        } else if (end) {
-                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, false, true);
-                        }
-                        break; 
-                        /*builder.addTube(unit, state, params.helixWidth, params.helixHeight /*, 1);*/
-                        /*if (start) {
-                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, true, false);
-                        } else if (end) {
-                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, false, true);
-                        }
-                        break; */
-                        case Core.Structure.SecondaryStructureType.Sheet:
-                        builder.addSheet(unit, state, start, end);
-                        if (start || end) {
-                            builder.addSheetCap(unit, state, start, end);
-                        }
-                        break; 
-                    case Core.Structure.SecondaryStructureType.Strand:
-                         builder.addTube(unit, state, params.strandWidth, params.strandWidth, 
-                            builder.hasP(unit.residueIndex[index], ctx.strandArrays)  ? params.nucleotideStrandFactor : 1); 
-                        if (start || end) {
                             builder.addTubeCap(unit, state, params.strandWidth, params.strandWidth, start, end);
-                        } 
-                        builder.addSheet(unit, state, start, end);
-                        if (start || end) {
-                            builder.addSheetCap(unit, state, start, end);
+                        }
 
                         if (!ctx.strandTemplate) {
                             makeStrandLineTemplate(ctx);
                         }
                         builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
-                    }
+
+
+                        builder.addSheet(unit, state, start, end);
+                        if (start || end) {
+                            builder.addSheetCap(unit, state, start, end);
+
+                            if (!ctx.strandTemplate) {
+                                makeStrandLineTemplate(ctx);
+                            }
+                            //builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
+                        }
                         break;
 
                     default:
@@ -202,17 +157,73 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                         }
                         break;
                 }
-            } 
+            } else {
+                switch (unit.residueType[index]) {
+                    case Core.Structure.SecondaryStructureType.Helix:
+                        //console.log(unit);
+                        //console.log(state, start, end);
+                        //builder.addCylinder(unit, state, start, end, params.helixWidth1, params.helixHeight1);
+                        if (!ctx.strandTemplate) {
+                            makeStrandLineTemplate(ctx);
+                        }
+                       // console.log(ctx.strandTemplate);
+                        //console.log(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
+                        builder.addCylinder(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
+                        cylCount++;
+                        if (start) {
+                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, true, false);
+                        } else if (end) {
+                            builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, false, true);
+                        }
+                        break;
+                    /*builder.addTube(unit, state, params.helixWidth, params.helixHeight /*, 1);*/
+                    /*if (start) {
+                        builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, true, false);
+                    } else if (end) {
+                        builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, false, true);
+                    }
+                    break; */
+                    case Core.Structure.SecondaryStructureType.Sheet:
+                        builder.addSheet(unit, state, start, end);
+                        if (start || end) {
+                            builder.addSheetCap(unit, state, start, end);
+                        }
+                        break;
+                    case Core.Structure.SecondaryStructureType.Strand:
+                        builder.addTube(unit, state, params.strandWidth, params.strandWidth,
+                            builder.hasP(unit.residueIndex[index], ctx.strandArrays) ? params.nucleotideStrandFactor : 1);
+                        if (start || end) {
+                            builder.addTubeCap(unit, state, params.strandWidth, params.strandWidth, start, end);
+                        }
+                        builder.addSheet(unit, state, start, end);
+                        if (start || end) {
+                            builder.addSheetCap(unit, state, start, end);
+
+                            if (!ctx.strandTemplate) {
+                                makeStrandLineTemplate(ctx);
+                            }
+                            builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
+                        }
+                        break;
+
+                    default:
+                        builder.addTube(unit, state, params.turnWidth, params.turnWidth, 1);
+                        if (start || end) {
+                            builder.addTubeCap(unit, state, params.turnWidth, params.turnWidth, start, end);
+                        }
+                        break;
+                }
+            }
             if (ctx.parameters.showDirectionCones && unit.residueType[index] !== Core.Structure.SecondaryStructureType.Strand) {
                 renderDirectionCone(ctx, unit, 2 * params.sheetHeight, index);
             }
 
             state.vertexMap.addVertexRange(numVertices, state.verticesDone);
             state.vertexMap.endElement();
-        } 
-    } 
+        }
+    }
 
-    function isGap(ctx: ContextSchematic, a: CartoonAsymUnit, b: CartoonAsymUnit) {        
+    function isGap(ctx: ContextSchematic, a: CartoonAsymUnit, b: CartoonAsymUnit) {
         const { chainIndex } = ctx.model.data.residues;
         return chainIndex[a.endResidueIndex] === chainIndex[b.endResidueIndex];
     }
@@ -227,7 +238,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
         GB.addDashedLine(ctx.state.gapsBuilder, a, b, 0.5, 0.5, r);
     }
 
-    const coneTemplate = (function() {
+    const coneTemplate = (function () {
         const geom = new THREE.CylinderGeometry(0, 1, 1, 6, 1);
         const ret = GeometryHelper.toRawGeometry(geom);
         geom.dispose();
@@ -244,7 +255,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
 
         if (i === j || 3 * j > cp.length) return;
 
-        Vec3.set(coneTranslation, cp[3 * i], cp[3 * i + 1], cp[3 * i + 2]);        
+        Vec3.set(coneTranslation, cp[3 * i], cp[3 * i + 1], cp[3 * i + 2]);
         Vec3.set(coneA, cp[3 * i], cp[3 * i + 1], cp[3 * i + 2]);
         Vec3.set(coneB, cp[3 * j], cp[3 * j + 1], cp[3 * j + 2]);
         Vec3.sub(coneA, coneB, coneA);
@@ -293,7 +304,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
             pickColorBuffer = new Float32Array(state.verticesDone * 4),
             stateBuffer = new Float32Array(state.verticesDone);
 
-        let geometry = GB.toBufferGeometry(state.builder);        
+        let geometry = GB.toBufferGeometry(state.builder);
         geometry.addAttribute('color', new THREE.BufferAttribute(colorBuffer, 3));
 
         ctx.geom.vertexStateBuffer = new THREE.BufferAttribute(stateBuffer, 1);
@@ -356,123 +367,128 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
             v.set(data[3 * i], data[3 * i + 1], data[3 * i + 2]);
             return v;
         }
-        
-        
-        addTube(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number , waveFactor: number) {
-            let verticesDone = state.verticesDone,
-            i = 0, j = 0,
-            radialVector = this.tempVectors[0], normalVector = this.tempVectors[1],
-            tempPos = this.tempVectors[2], a = this.tempVectors[3], b = this.tempVectors[4], u = this.tempVectors[5], v = this.tempVectors[6],
-            
-            elementOffsetStart = state.residueIndex * element.linearSegmentCount,
-            elementOffsetEnd = elementOffsetStart + element.linearSegmentCount,
-            elementPoints = element.controlPoints,
-            elementPointsCount = element.linearSegmentCount + 1,
-            torsionVectors = element.torsionVectors,
-            normalVectors = element.normalVectors,
-            radialSegmentCount = state.params.radialSegmentCount;
-
-        const di = 1 / (elementOffsetEnd - elementOffsetStart);
-
-        for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
-            this.setVector(torsionVectors, i, u);
-            this.setVector(normalVectors, i, v);
-
-            const tt = di * (i - elementOffsetStart) - 0.5;
-            const ff = 1 + (waveFactor - 1) * (Math.cos(2 * Math.PI * tt) + 1);
-            const w = ff * width, h = ff * height;
-
-            for (j = 0; j < radialSegmentCount; j++) {
-                let t = 2 * Math.PI * j / radialSegmentCount;
-
-                a.copy(u);
-                b.copy(v);
-                radialVector.addVectors(a.multiplyScalar(w * Math.cos(t)), b.multiplyScalar(h * Math.sin(t)));
-
-                a.copy(u);
-                b.copy(v);
-                normalVector.addVectors(a.multiplyScalar(h * Math.cos(t)), b.multiplyScalar(w * Math.sin(t)));
-                normalVector.normalize();
-
-                this.setVector(elementPoints, i, tempPos);
-                tempPos.add(radialVector);
 
 
-                state.addVertex(tempPos, normalVector);
-            }
-        }
-
-        for (i = 0; i < elementPointsCount - 1; i++) {
-            for (j = 0; j < radialSegmentCount; j++) {
-                state.addTriangles(
-                    (verticesDone + i * radialSegmentCount + j),
-                    (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount),
-                    (verticesDone + i * radialSegmentCount + (j + 1) % radialSegmentCount),
-
-                    (verticesDone + i * radialSegmentCount + j),
-                    (verticesDone + (i + 1) * radialSegmentCount + j),
-                    (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount));
-            }
-        }
-        }
-
-        addCylinder (element:CartoonAsymUnit,state:SchematicGeometryState, isStart:boolean, isEnd:boolean, width:number, height:number) {
+        addTube(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number, waveFactor: number) {
             let verticesDone = state.verticesDone,
                 i = 0, j = 0,
-                horizontalVector = this.tempVectors[0], normalVector = this.tempVectors[1],a = this.tempVectors[2], b = this.tempVectors[3], u = this.tempVectors[4],
-                 v = this.tempVectors[5], radialVector = this.tempVectors[6], tempPos = this.tempVectors[7], tempPos1 = this.tempVectors[8],
-                  tempPos2 = this.tempVectors[8], verticalVector = this.tempVectors[9],
+                radialVector = this.tempVectors[0], normalVector = this.tempVectors[1],
+                tempPos = this.tempVectors[2], a = this.tempVectors[3], b = this.tempVectors[4], u = this.tempVectors[5], v = this.tempVectors[6],
+
                 elementOffsetStart = state.residueIndex * element.linearSegmentCount,
+                elementOffsetEnd = elementOffsetStart + element.linearSegmentCount,
                 elementPoints = element.controlPoints,
                 elementPointsCount = element.linearSegmentCount + 1,
-                normalVectors = element.normalVectors,
-                elementOffsetEnd = elementOffsetStart + element.linearSegmentCount,
                 torsionVectors = element.torsionVectors,
+                normalVectors = element.normalVectors,
                 radialSegmentCount = state.params.radialSegmentCount;
 
-                for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
-                    
-    
-                    this.setVector(torsionVectors, i, horizontalVector);
-                    horizontalVector.multiplyScalar(width);
-    
-                    this.setVector(normalVectors, i, verticalVector);
-                    verticalVector.multiplyScalar(height); 
-                    let t = 2 * Math.PI *i / radialSegmentCount;
-                    const r = width/2;
+            const di = 1 / (elementOffsetEnd - elementOffsetStart);
+
+            for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
+                this.setVector(torsionVectors, i, u);
+                this.setVector(normalVectors, i, v);
+
+                const tt = di * (i - elementOffsetStart) - 0.5;
+                const ff = 1 + (waveFactor - 1) * (Math.cos(2 * Math.PI * tt) + 1);
+                const w = ff * width, h = ff * height;
+
+                for (j = 0; j < radialSegmentCount; j++) {
+                    let t = 2 * Math.PI * j / radialSegmentCount;
+
                     a.copy(u);
                     b.copy(v);
-                    radialVector.addVectors(a.multiplyScalar(Math.cos(t) * width), b.multiplyScalar(Math.sin(t) * width));
-                    
+                    radialVector.addVectors(a.multiplyScalar(w * Math.cos(t)), b.multiplyScalar(h * Math.sin(t)));
+
+                    a.copy(u);
+                    b.copy(v);
+                    normalVector.addVectors(a.multiplyScalar(h * Math.cos(t)), b.multiplyScalar(w * Math.sin(t)));
+                    normalVector.normalize();
+
                     this.setVector(elementPoints, i, tempPos);
-                    radialVector.add(tempPos);
-                    //tempPos.add (radialVector);
+                    tempPos.add(radialVector);
+
+
+                    state.addVertex(tempPos, normalVector);
+                }
+            }
+
+            for (i = 0; i < elementPointsCount - 1; i++) {
+                for (j = 0; j < radialSegmentCount; j++) {
+                    state.addTriangles(
+                        (verticesDone + i * radialSegmentCount + j),
+                        (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount),
+                        (verticesDone + i * radialSegmentCount + (j + 1) % radialSegmentCount),
+
+                        (verticesDone + i * radialSegmentCount + j),
+                        (verticesDone + (i + 1) * radialSegmentCount + j),
+                        (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount));
+                }
+            }
+        }
+
+        addCylinder2(element: CartoonAsymUnit, state: SchematicGeometryState, isStart: boolean, isEnd: boolean, width: number, height: number) {
+            let verticesDone = state.verticesDone,
+                i = 0, j = 0,
+                radialVector = this.tempVectors[0], normalVector = this.tempVectors[1],
+                tempPos = this.tempVectors[2], a = this.tempVectors[3], b = this.tempVectors[4], u = this.tempVectors[5], v = this.tempVectors[6],
+
+                elementOffsetStart = state.residueIndex * element.linearSegmentCount,
+                elementOffsetEnd = elementOffsetStart + element.linearSegmentCount,
+                elementPoints = element.controlPoints,
+                elementPointsCount = element.linearSegmentCount + 1,
+                torsionVectors = element.torsionVectors,
+                normalVectors = element.normalVectors,
+                radialSegmentCount = state.params.radialSegmentCount;
+
+            const di = 1 / (elementOffsetEnd - elementOffsetStart);
+
+            for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
+                this.setVector(torsionVectors, i, u);
+                this.setVector(normalVectors, i, v);
+
+                const tt = di * (i - elementOffsetStart) - 0.5;
+                const ff = 1 + (1 - 1) * (Math.cos(2 * Math.PI * tt) + 1);
+                const w = 1; //ff * width,
+                const h = 1; //ff * height;
+
+
+                for (j = 0; j < radialSegmentCount; j++) {
+                    let t = 2 * Math.PI * j / radialSegmentCount;
+
+                    a.copy(u);
+                    b.copy(v);
+                    radialVector.addVectors(a.multiplyScalar(w * Math.cos(t)), b.multiplyScalar(h * Math.sin(t)));
+
+                    a.copy(u);
+                    b.copy(v);
+                    normalVector.addVectors(a.multiplyScalar(h * Math.cos(t)), b.multiplyScalar(w * Math.sin(t)));
+                    normalVector.normalize();
+
+                    this.setVector(elementPoints, i, tempPos);
+                    tempPos.add(radialVector);
+
+
+                    state.addVertex(tempPos, normalVector);
+                }
+            }
+
+            for (i = 0; i < elementPointsCount - 1; i++) {
+                for (j = 0; j < radialSegmentCount; j++) {
+                    state.addTriangles(
+                        (verticesDone + i * radialSegmentCount + j),
+                        (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount),
+                        (verticesDone + i * radialSegmentCount + (j + 1) % radialSegmentCount),
+
+                        (verticesDone + i * radialSegmentCount + j),
+                        (verticesDone + (i + 1) * radialSegmentCount + j),
+                        (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount));
+                }
+            }
 
 
 
-                    
-                     
-        
-                  }
-                         for (i = 0; i < elementPointsCount - 1; i++) {
-                             for (j = 0; j < radialSegmentCount; j++) {
-                                  state.addTriangles(
-                                  (verticesDone + i * radialSegmentCount +j),
-                                  (verticesDone + (i + 1) * radialSegmentCount + (j + 1) % radialSegmentCount),
-                                  (verticesDone + i * radialSegmentCount + (j + 1) % radialSegmentCount ),
-        
-                                  (verticesDone + i * radialSegmentCount + j),
-                                  (verticesDone + (i + 1) * radialSegmentCount + j),
-                                  (verticesDone + (i +1) * radialSegmentCount + (j + 1) % radialSegmentCount));
-
-                                  
-                            }
-                         }
-                
-                 
-                 
-                 
-             }
+        }
 
 
 
@@ -480,7 +496,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
 
 
 
-        
+
 
         addTubeCap(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number, isStart: boolean, isEnd: boolean) {
             let verticesDone = state.verticesDone,
@@ -488,7 +504,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                 t: number,
                 radialVector = this.tempVectors[0], normalVector = this.tempVectors[1],
                 a = this.tempVectors[2], b = this.tempVectors[3], u = this.tempVectors[4], v = this.tempVectors[5], tA = this.tempVectors[6], tB = this.tempVectors[7],
-                
+
                 elementOffsetStart = state.residueIndex * element.linearSegmentCount,
                 elementPoints = element.controlPoints,
                 elementPointsCount = element.linearSegmentCount + 1,
@@ -514,7 +530,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
             this.setVector(normalVectors, offset, v);
             for (let i = 0; i < radialSegmentCount; i++) {
                 t = 2 * Math.PI * i / radialSegmentCount;
-                let r = width/2;
+                let r = width / 2;
                 a.copy(u);
                 b.copy(v);
                 radialVector.addVectors(a.multiplyScalar(Math.cos(t) * r), b.multiplyScalar(Math.sin(t) * r));
@@ -541,18 +557,18 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                 normalOffset = this.tempVectors[3], normalVector = this.tempVectors[4],
                 temp = this.tempVectors[5], tA = this.tempVectors[7], tB = this.tempVectors[8],
                 torsionVector = this.tempVectors[9],
-                
+
                 elementOffsetStart = state.residueIndex * element.linearSegmentCount,
                 elementOffsetEnd = elementOffsetStart + element.linearSegmentCount,
                 elementPoints = element.controlPoints,
                 torsionVectors = element.torsionVectors,
                 normalVectors = element.normalVectors,
-                
 
-                
+
+
                 offsetLength = 0, actualWidth = 0;
 
-                normalOffset.set(0, 0, 0);
+            normalOffset.set(0, 0, 0);
 
             if (isEnd) {
                 this.setVector(elementPoints, elementOffsetEnd, tA);
@@ -567,7 +583,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                 horizontalVector.multiplyScalar(actualWidth);
 
                 this.setVector(normalVectors, i, verticalVector);
-                verticalVector.multiplyScalar(params.sheetHeight); 
+                verticalVector.multiplyScalar(params.sheetHeight);
 
                 if (isEnd) {
                     this.setVector(normalVectors, i, tA);
@@ -612,12 +628,16 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
             for (i = 0; i < element.linearSegmentCount; i++) {
                 for (j = 0; j < 4; j++) {
                     state.addTriangles(
-                        verticesDone + i * 8 + 2 * j, verticesDone + (i + 1) * 8 + 2 * j + 1, verticesDone + i * 8 + 2 * j + 1,
-                        verticesDone + i * 8 + 2 * j, verticesDone + (i + 1) * 8 + 2 * j, verticesDone + (i + 1) * 8 + 2 * j + 1);
+                        verticesDone + i * 8 + 2 * j,
+                        verticesDone + (i + 1) * 8 + 2 * j + 1,
+                        verticesDone + i * 8 + 2 * j + 1,
+                        verticesDone + i * 8 + 2 * j,
+                        verticesDone + (i + 1) * 8 + 2 * j,
+                        verticesDone + (i + 1) * 8 + 2 * j + 1);
                 }
             }
 
-        
+
         }
 
 
@@ -626,7 +646,7 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
 
         addSheetCap(element: CartoonAsymUnit, state: SchematicGeometryState, isStart: boolean, isEnd: boolean) {
             let params = state.params,
-                
+
                 elementOffsetStart = state.residueIndex * element.linearSegmentCount,
                 elementPoint = this.setVector(element.controlPoints, elementOffsetStart, this.tempVectors[0]);
 
@@ -721,6 +741,78 @@ namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
                 state.addVertex(p, n);
             }
             for (i = 0; i < triangleCount; i += 3) {
+                state.addTriangle(vertexStart + ib[i], vertexStart + ib[i + 1], vertexStart + ib[i + 2]);
+            }
+            state.invMatrix.getInverse(state.translationMatrix);
+            template.geometry.applyMatrix(state.invMatrix);
+        }
+
+        addCylinder(
+            element: CartoonAsymUnit, state: SchematicGeometryState,
+            template: { vertex: number[]; normal: number[]; index: number[]; geometry: THREE.BufferGeometry },
+            arrays: { startIndex: number[]; endIndex: number[]; x: number[]; y: number[]; z: number[]; name: string[] },
+            residueIndex: number) {
+                
+                
+                
+                if(element.residueType[residueIndex-1] == 1) return;
+
+                console.log("cylinder calls:", cylCount);
+
+                console.log("element", element);
+                console.log("start and end index", arrays)
+                console.log("residueIndex", residueIndex)
+            /*
+                elements of heilxes can be detected by looking into element.residueStarts and ...Ends
+                
+            
+            */
+
+
+            //  if (!this.findN3(residueIndex, arrays, this.tempVectors[3])){
+                 
+            //      return;
+            //  } 
+
+            let p = this.tempVectors[0], n = this.tempVectors[1], i: number,
+                vb = template.vertex,
+                nb = template.normal,
+                ib = template.index,
+                vertexStart = state.verticesDone,
+                vertexCount = vb.length,
+                triangleCount = ib.length,
+                elementOffset = state.residueIndex * element.linearSegmentCount + ((0.5 * element.linearSegmentCount + 1) | 0),
+                elementPoint = this.setVector(element.controlPoints, elementOffset, this.tempVectors[2]),
+                nDir = this.tempVectors[3].sub(elementPoint),
+                length = nDir.length();
+
+console.log("template", template);
+console.log("state", state);
+
+            nDir.normalize();
+
+            state.translationMatrix.makeTranslation(elementPoint.x, elementPoint.y, elementPoint.z);
+            state.scaleMatrix.makeScale(1, 1, length);
+            state.rotationMatrix.makeRotationAxis(new THREE.Vector3(-nDir.y, nDir.x, 0), Math.acos(nDir.z));
+            state.translationMatrix.multiply(state.rotationMatrix).multiply(state.scaleMatrix);
+
+            //template.geometry = new THREE.CylinderGeometry( 5, 5, 20, 32 );
+
+            template.geometry.applyMatrix(state.translationMatrix);
+
+                console.log("tempvectors", this.tempVectors);
+                console.log("triangleCount", triangleCount);
+                console.log("vertexCount", vertexCount);
+
+
+            for (i = 0; i < vertexCount; i += 3) {
+                p.set(vb[i], vb[i + 1], vb[i + 2]);
+                n.set(nb[i], nb[i + 1], nb[i + 2]);
+                state.addVertex(p, n);
+               // console.log("p ", p, "n ", n)
+            }
+            for (i = 0; i < triangleCount; i += 3) {
+               // console.log("ib[" + i + "]" , ib[i])
                 state.addTriangle(vertexStart + ib[i], vertexStart + ib[i + 1], vertexStart + ib[i + 2]);
             }
             state.invMatrix.getInverse(state.translationMatrix);

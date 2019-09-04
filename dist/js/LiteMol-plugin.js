@@ -71888,9 +71888,11 @@ var LiteMol;
                             geometry: templ
                         };
                     }
+                    var cylCount = 0;
                     function buildUnit(unit, ctx) {
                         var state = ctx.state, params = ctx.params;
                         var builder = ctx.builder;
+                        //for (let index = 0, _max = unit.residueCount; index < _max; index++) {
                         for (var index = 0, _max = unit.residueCount; index < _max; index++) {
                             state.vertexMap.startElement(unit.residueIndex[index]);
                             var numVertices = state.verticesDone;
@@ -71914,7 +71916,7 @@ var LiteMol;
                                             if (!ctx.strandTemplate) {
                                                 makeStrandLineTemplate(ctx);
                                             }
-                                            builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
+                                            //builder.addStrandLine(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
                                         }
                                         break;
                                     default:
@@ -71928,7 +71930,16 @@ var LiteMol;
                             else {
                                 switch (unit.residueType[index]) {
                                     case 1 /* Helix */:
-                                        builder.addCylinder(unit, state, start, end, params.helixWidth1, params.helixHeight1);
+                                        //console.log(unit);
+                                        //console.log(state, start, end);
+                                        //builder.addCylinder(unit, state, start, end, params.helixWidth1, params.helixHeight1);
+                                        if (!ctx.strandTemplate) {
+                                            makeStrandLineTemplate(ctx);
+                                        }
+                                        // console.log(ctx.strandTemplate);
+                                        //console.log(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
+                                        builder.addCylinder(unit, state, ctx.strandTemplate, ctx.strandArrays, unit.residueIndex[index]);
+                                        cylCount++;
                                         if (start) {
                                             builder.addTubeCap(unit, state, params.helixWidth, params.helixHeight, true, false);
                                         }
@@ -72136,21 +72147,29 @@ var LiteMol;
                                 }
                             }
                         };
-                        BuilderSchematic.prototype.addCylinder = function (element, state, isStart, isEnd, width, height) {
-                            var verticesDone = state.verticesDone, i = 0, j = 0, horizontalVector = this.tempVectors[0], normalVector = this.tempVectors[1], a = this.tempVectors[2], b = this.tempVectors[3], u = this.tempVectors[4], v = this.tempVectors[5], radialVector = this.tempVectors[6], tempPos = this.tempVectors[7], tempPos1 = this.tempVectors[8], tempPos2 = this.tempVectors[8], verticalVector = this.tempVectors[9], elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementPoints = element.controlPoints, elementPointsCount = element.linearSegmentCount + 1, normalVectors = element.normalVectors, elementOffsetEnd = elementOffsetStart + element.linearSegmentCount, torsionVectors = element.torsionVectors, radialSegmentCount = state.params.radialSegmentCount;
+                        BuilderSchematic.prototype.addCylinder2 = function (element, state, isStart, isEnd, width, height) {
+                            var verticesDone = state.verticesDone, i = 0, j = 0, radialVector = this.tempVectors[0], normalVector = this.tempVectors[1], tempPos = this.tempVectors[2], a = this.tempVectors[3], b = this.tempVectors[4], u = this.tempVectors[5], v = this.tempVectors[6], elementOffsetStart = state.residueIndex * element.linearSegmentCount, elementOffsetEnd = elementOffsetStart + element.linearSegmentCount, elementPoints = element.controlPoints, elementPointsCount = element.linearSegmentCount + 1, torsionVectors = element.torsionVectors, normalVectors = element.normalVectors, radialSegmentCount = state.params.radialSegmentCount;
+                            var di = 1 / (elementOffsetEnd - elementOffsetStart);
                             for (i = elementOffsetStart; i <= elementOffsetEnd; i++) {
-                                this.setVector(torsionVectors, i, horizontalVector);
-                                horizontalVector.multiplyScalar(width);
-                                this.setVector(normalVectors, i, verticalVector);
-                                verticalVector.multiplyScalar(height);
-                                var t = 2 * Math.PI * i / radialSegmentCount;
-                                var r = width / 2;
-                                a.copy(u);
-                                b.copy(v);
-                                radialVector.addVectors(a.multiplyScalar(Math.cos(t) * width), b.multiplyScalar(Math.sin(t) * width));
-                                this.setVector(elementPoints, i, tempPos);
-                                radialVector.add(tempPos);
-                                //tempPos.add (radialVector);
+                                this.setVector(torsionVectors, i, u);
+                                this.setVector(normalVectors, i, v);
+                                var tt = di * (i - elementOffsetStart) - 0.5;
+                                var ff = 1 + (1 - 1) * (Math.cos(2 * Math.PI * tt) + 1);
+                                var w = 1; //ff * width,
+                                var h = 1; //ff * height;
+                                for (j = 0; j < radialSegmentCount; j++) {
+                                    var t = 2 * Math.PI * j / radialSegmentCount;
+                                    a.copy(u);
+                                    b.copy(v);
+                                    radialVector.addVectors(a.multiplyScalar(w * Math.cos(t)), b.multiplyScalar(h * Math.sin(t)));
+                                    a.copy(u);
+                                    b.copy(v);
+                                    normalVector.addVectors(a.multiplyScalar(h * Math.cos(t)), b.multiplyScalar(w * Math.sin(t)));
+                                    normalVector.normalize();
+                                    this.setVector(elementPoints, i, tempPos);
+                                    tempPos.add(radialVector);
+                                    state.addVertex(tempPos, normalVector);
+                                }
                             }
                             for (i = 0; i < elementPointsCount - 1; i++) {
                                 for (j = 0; j < radialSegmentCount; j++) {
@@ -72296,6 +72315,47 @@ var LiteMol;
                                 state.addVertex(p, n);
                             }
                             for (i = 0; i < triangleCount; i += 3) {
+                                state.addTriangle(vertexStart + ib[i], vertexStart + ib[i + 1], vertexStart + ib[i + 2]);
+                            }
+                            state.invMatrix.getInverse(state.translationMatrix);
+                            template.geometry.applyMatrix(state.invMatrix);
+                        };
+                        BuilderSchematic.prototype.addCylinder = function (element, state, template, arrays, residueIndex) {
+                            if (element.residueType[residueIndex - 1] == 1)
+                                return;
+                            console.log("cylinder calls:", cylCount);
+                            console.log("element", element);
+                            console.log("start and end index", arrays);
+                            console.log("residueIndex", residueIndex);
+                            /*
+                                elements of heilxes can be detected by looking into element.residueStarts and ...Ends
+                                
+                            
+                            */
+                            //  if (!this.findN3(residueIndex, arrays, this.tempVectors[3])){
+                            //      return;
+                            //  } 
+                            var p = this.tempVectors[0], n = this.tempVectors[1], i, vb = template.vertex, nb = template.normal, ib = template.index, vertexStart = state.verticesDone, vertexCount = vb.length, triangleCount = ib.length, elementOffset = 1, // state.residueIndex * element.linearSegmentCount + ((0.5 * element.linearSegmentCount + 1) | 0),
+                            elementPoint = this.setVector(element.controlPoints, elementOffset, this.tempVectors[2]), nDir = this.tempVectors[3].sub(elementPoint), length = nDir.length();
+                            console.log("template", template);
+                            console.log("state", state);
+                            nDir.normalize();
+                            state.translationMatrix.makeTranslation(elementPoint.x, elementPoint.y, elementPoint.z);
+                            state.scaleMatrix.makeScale(1, 1, length);
+                            state.rotationMatrix.makeRotationAxis(new Visualization.THREE.Vector3(-nDir.y, nDir.x, 0), Math.acos(nDir.z));
+                            state.translationMatrix.multiply(state.rotationMatrix).multiply(state.scaleMatrix);
+                            template.geometry.applyMatrix(state.translationMatrix);
+                            console.log("tempvectors", this.tempVectors);
+                            console.log("triangleCount", triangleCount);
+                            console.log("vertexCount", vertexCount);
+                            for (i = 0; i < vertexCount; i += 3) {
+                                p.set(vb[i], vb[i + 1], vb[i + 2]);
+                                n.set(nb[i], nb[i + 1], nb[i + 2]);
+                                state.addVertex(p, n);
+                                // console.log("p ", p, "n ", n)
+                            }
+                            for (i = 0; i < triangleCount; i += 3) {
+                                // console.log("ib[" + i + "]" , ib[i])
                                 state.addTriangle(vertexStart + ib[i], vertexStart + ib[i + 1], vertexStart + ib[i + 2]);
                             }
                             state.invMatrix.getInverse(state.translationMatrix);

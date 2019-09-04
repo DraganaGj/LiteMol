@@ -17,7 +17,7 @@ var LiteMol;
                 urlTemplate: function (id) { return id; },
                 isFullUrl: true
             });
-            DataSources.ObtainDownloadSources = ['CoordinateServer', 'PDBe Updated mmCIF', 'URL', 'File on Disk'];
+            DataSources.ObtainDownloadSources = ['File on Disk'];
             DataSources.ObtainMolecule = Bootstrap.Tree.Transformer.action({
                 id: 'viewer-obtain-molecule',
                 name: 'Molecule',
@@ -656,7 +656,7 @@ var LiteMol;
         }
         Custom.create = create;
         // create the instance...
-        var id = '1tqn';
+        var id = '1dg5';
         var plugin = create(document.getElementById('app'));
         var action = plugin.createTransform();
         action.add(plugin.context.tree.root, Transformer.Data.Download, { url: "https://www.ebi.ac.uk/pdbe/static/entry/" + id + "_updated.cif", type: 'String', id: id })

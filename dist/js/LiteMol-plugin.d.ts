@@ -12350,7 +12350,7 @@ declare namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
         private tempVectors;
         private setVector;
         addTube(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number, waveFactor: number): void;
-        addCylinder(element: CartoonAsymUnit, state: SchematicGeometryState, isStart: boolean, isEnd: boolean, width: number, height: number): void;
+        addCylinder2(element: CartoonAsymUnit, state: SchematicGeometryState, isStart: boolean, isEnd: boolean, width: number, height: number): void;
         addTubeCap(element: CartoonAsymUnit, state: SchematicGeometryState, width: number, height: number, isStart: boolean, isEnd: boolean): void;
         addSheet(element: CartoonAsymUnit, state: SchematicGeometryState, isStart: boolean, isEnd: boolean): void;
         addSheetCap(element: CartoonAsymUnit, state: SchematicGeometryState, isStart: boolean, isEnd: boolean): void;
@@ -12365,6 +12365,19 @@ declare namespace LiteMol.Visualization.Molecule.Schematic.Geometry {
             name: string[];
         }): boolean;
         addStrandLine(element: CartoonAsymUnit, state: SchematicGeometryState, template: {
+            vertex: number[];
+            normal: number[];
+            index: number[];
+            geometry: THREE.BufferGeometry;
+        }, arrays: {
+            startIndex: number[];
+            endIndex: number[];
+            x: number[];
+            y: number[];
+            z: number[];
+            name: string[];
+        }, residueIndex: number): void;
+        addCylinder(element: CartoonAsymUnit, state: SchematicGeometryState, template: {
             vertex: number[];
             normal: number[];
             index: number[];
